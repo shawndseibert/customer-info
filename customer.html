@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="customer-styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw&libraries=places&callback=initAutocomplete"></script>
 </head>
 <body>
     <div class="container">
@@ -66,7 +67,7 @@
 
                     <div class="form-field">
                         <label for="address">Property Address *</label>
-                        <textarea id="address" name="address" rows="2" required placeholder="123 Main Street, City, State, ZIP"></textarea>
+                        <input type="text" id="address" name="address" required placeholder="Start typing your address..." autocomplete="off">
                         <small>This helps us provide accurate estimates and scheduling</small>
                     </div>
                 </div>

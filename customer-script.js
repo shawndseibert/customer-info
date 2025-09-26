@@ -1,3 +1,35 @@
+// Google Places Autocomplete initialization
+let autocomplete;
+
+function initAutocomplete() {
+    try {
+        autocomplete = new google.maps.places.Autocomplete(
+            document.getElementById('address'),
+            {
+                types: ['address'],
+                componentRestrictions: { country: 'us' },
+                fields: ['formatted_address', 'address_components', 'geometry']
+            }
+        );
+
+        // Add listener for place selection
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                document.getElementById('address').value = place.formatted_address;
+                // Trigger input event to save form progress
+                document.getElementById('address').dispatchEvent(new Event('input'));
+            }
+        });
+    } catch (error) {
+        console.log('Google Places API not available:', error);
+        // Fallback: address field will work as regular text input
+    }
+}
+
+// Fallback function if Google Maps fails to load
+window.initAutocomplete = initAutocomplete;
+
 // Customer Quote Form Management
 class CustomerQuoteForm {
     constructor() {

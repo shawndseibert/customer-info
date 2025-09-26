@@ -74,39 +74,53 @@ function doGet(e) {
         };
       }
     } else if (action === 'addCustomer') {
-      // Add new customer to Google Sheets
+      // Add new customer to Google Sheets (with duplicate check)
       try {
         const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
+        const customerId = e.parameter.id;
         
-        // Get customer data from parameters
-        const customerData = [
-          e.parameter.id || '',
-          e.parameter.firstName || '',
-          e.parameter.lastName || '',
-          e.parameter.phone || '',
-          e.parameter.email || '',
-          e.parameter.address || '',
-          e.parameter.city || '',
-          e.parameter.state || '',
-          e.parameter.zip || '',
-          e.parameter.service || '',
-          e.parameter.status || '',
-          e.parameter.priority || '',
-          e.parameter.notes || '',
-          e.parameter.dateAdded || new Date().toISOString(),
-          e.parameter.budget || '',
-          e.parameter.preferredDate || ''
-        ];
+        // Check for existing customer by ID
+        const data = sheet.getDataRange().getValues();
+        const existingCustomer = data.find(row => row[0] === customerId);
         
-        // Add the new row to the sheet
-        sheet.appendRow(customerData);
-        
-        result = {
-          status: 'success',
-          message: 'Customer added to Google Sheets',
-          customerId: e.parameter.id,
-          timestamp: new Date().toISOString()
-        };
+        if (existingCustomer) {
+          result = {
+            status: 'duplicate',
+            message: 'Customer already exists in Google Sheets',
+            customerId: customerId,
+            timestamp: new Date().toISOString()
+          };
+        } else {
+          // Get customer data from parameters
+          const customerData = [
+            customerId || '',
+            e.parameter.firstName || '',
+            e.parameter.lastName || '',
+            e.parameter.phone || '',
+            e.parameter.email || '',
+            e.parameter.address || '',
+            e.parameter.city || '',
+            e.parameter.state || '',
+            e.parameter.zip || '',
+            e.parameter.service || '',
+            e.parameter.status || '',
+            e.parameter.priority || '',
+            e.parameter.notes || '',
+            e.parameter.dateAdded || new Date().toISOString(),
+            e.parameter.budget || '',
+            e.parameter.preferredDate || ''
+          ];
+          
+          // Add the new row to the sheet
+          sheet.appendRow(customerData);
+          
+          result = {
+            status: 'success',
+            message: 'Customer added to Google Sheets',
+            customerId: customerId,
+            timestamp: new Date().toISOString()
+          };
+        }
       } catch (error) {
         console.error('Error adding customer to sheet:', error);
         result = {

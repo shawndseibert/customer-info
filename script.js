@@ -1233,10 +1233,13 @@ class CustomerManager {
             console.log('Syncing new customer to Google Sheets:', customerData);
             
             // Use JSONP to send data to Google Apps Script
-            const success = await this.sendCustomerToGoogleSheets(customerData);
+            const result = await this.sendCustomerToGoogleSheets(customerData);
             
-            if (success) {
+            if (result.success) {
                 this.showNotification('Customer synced to Google Sheets!', 'success');
+            } else if (result.duplicate) {
+                console.info('Customer already exists in Google Sheets');
+                this.showNotification('Customer saved locally. Already exists in Google Sheets.', 'info');
             } else {
                 console.warn('Failed to sync customer to Google Sheets');
                 this.showNotification('Customer saved locally. Google Sheets sync failed.', 'warning');
@@ -1257,9 +1260,11 @@ class CustomerManager {
                 cleanup();
                 
                 if (response && response.status === 'success') {
-                    resolve(true);
+                    resolve({ success: true, duplicate: false });
+                } else if (response && response.status === 'duplicate') {
+                    resolve({ success: false, duplicate: true });
                 } else {
-                    resolve(false);
+                    resolve({ success: false, duplicate: false });
                 }
             };
             
@@ -1300,14 +1305,14 @@ class CustomerManager {
             script.onerror = () => {
                 console.error('Failed to load Google Apps Script for adding customer');
                 cleanup();
-                resolve(false);
+                resolve({ success: false, duplicate: false });
             };
             
             // Set timeout for request
             setTimeout(() => {
                 console.warn('Google Sheets add request timed out');
                 cleanup();
-                resolve(false);
+                resolve({ success: false, duplicate: false });
             }, 10000); // 10 second timeout
             
             document.head.appendChild(script);
@@ -1324,13 +1329,16 @@ class CustomerManager {
         this.showNotification(`Pushing ${this.customers.length} customers to Google Sheets...`, 'info');
         
         let successCount = 0;
+        let duplicateCount = 0;
         let errorCount = 0;
 
         for (const customer of this.customers) {
             try {
-                const success = await this.sendCustomerToGoogleSheets(customer);
-                if (success) {
+                const result = await this.sendCustomerToGoogleSheets(customer);
+                if (result.success) {
                     successCount++;
+                } else if (result.duplicate) {
+                    duplicateCount++;
                 } else {
                     errorCount++;
                 }
@@ -1343,13 +1351,26 @@ class CustomerManager {
             }
         }
 
-        // Show results
-        if (successCount > 0 && errorCount === 0) {
-            this.showNotification(`✅ Successfully pushed all ${successCount} customers to Google Sheets!`, 'success');
-        } else if (successCount > 0 && errorCount > 0) {
-            this.showNotification(`⚠️ Pushed ${successCount} customers, ${errorCount} failed. Check console for details.`, 'warning');
+        // Show detailed results
+        const total = this.customers.length;
+        let message = '';
+        
+        if (successCount > 0) {
+            message += `✅ Added ${successCount} new customers`;
+        }
+        if (duplicateCount > 0) {
+            message += (message ? ', ' : '') + `📋 ${duplicateCount} already existed`;
+        }
+        if (errorCount > 0) {
+            message += (message ? ', ' : '') + `❌ ${errorCount} failed`;
+        }
+        
+        if (successCount === total) {
+            this.showNotification(`${message} to Google Sheets!`, 'success');
+        } else if (successCount > 0 || duplicateCount === total) {
+            this.showNotification(`${message}. Push complete!`, 'info');
         } else {
-            this.showNotification(`❌ Failed to push customers to Google Sheets. Check your connection.`, 'error');
+            this.showNotification(`${message}. Check your connection.`, 'error');
         }
     }
 

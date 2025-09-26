@@ -265,8 +265,7 @@ class CustomerQuoteForm {
     }
 
     async sendToGoogleSheets(formData) {
-        // Send customer data directly to Google Sheets
-        // You'll need to set up a Google Apps Script (instructions in GOOGLE-SHEETS-SETUP.md)
+        // Send customer data directly to Google Sheets using form submission method (CORS-free)
         
         const sheetData = {
             timestamp: new Date(formData.timestamp).toLocaleString(),
@@ -289,21 +288,40 @@ class CustomerQuoteForm {
         };
 
         try {
-            // Replace 'YOUR_GOOGLE_SCRIPT_URL' with your actual Google Apps Script Web App URL
-            const response = await fetch('https://script.google.com/macros/s/AKfycbyXDRZQbwaFS-_iQrmffwPy2WVnnRPT_sQWQGSx0MlIr3NNM7wdBhpLODm4XnDWCyr9_Q/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(sheetData)
+            // Use form submission method to avoid CORS issues
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'https://script.google.com/macros/s/AKfycbyXDRZQbwaFS-_iQrmffwPy2WVnnRPT_sQWQGSx0MlIr3NNM7wdBhpLODm4XnDWCyr9_Q/exec';
+            form.target = '_blank';
+            form.style.display = 'none';
+
+            // Add all data as hidden form fields
+            Object.keys(sheetData).forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = sheetData[key];
+                form.appendChild(input);
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to save to Google Sheets');
-            }
+            // Submit form in hidden iframe to avoid page navigation
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'google-sheets-submit';
+            document.body.appendChild(iframe);
+            
+            form.target = 'google-sheets-submit';
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Clean up after 2 seconds
+            setTimeout(() => {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+            }, 2000);
 
-            console.log('Data saved to Google Sheets successfully');
-            return await response.json();
+            console.log('Data submitted to Google Sheets (form method)');
+            return { status: 'success', message: 'Form submitted' };
         } catch (error) {
             console.error('Failed to save to Google Sheets:', error);
             // Don't throw error - we still want to show success to customer

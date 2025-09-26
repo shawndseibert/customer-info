@@ -290,7 +290,7 @@ class CustomerQuoteForm {
 
         try {
             // Replace 'YOUR_GOOGLE_SCRIPT_URL' with your actual Google Apps Script Web App URL
-            const response = await fetch('YOUR_GOOGLE_SCRIPT_URL', {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbyHldC3aQJS3-8C8e33rOGqQ3yJ69eIdNj3D5gVTdB5aSXUq06Yzkt_UNRaMOPexffmyg/exec', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -317,7 +317,7 @@ class CustomerQuoteForm {
         
         try {
             const emailData = {
-                to_email: 'YOUR_EMAIL@gmail.com', // Replace with your email
+                to_email: 'shawn.d.seibert@gmail.com', // Replace with your email
                 customer_name: `${formData.firstName} ${formData.lastName}`,
                 customer_phone: formData.phone,
                 customer_email: formData.email || 'Not provided',
@@ -337,10 +337,10 @@ class CustomerQuoteForm {
 
             // Replace these with your actual EmailJS credentials
             const response = await emailjs.send(
-                'YOUR_SERVICE_ID',    // Your EmailJS service ID
-                'YOUR_TEMPLATE_ID',   // Your EmailJS template ID
+                'service_y7jy0vv',    // Your EmailJS service ID
+                'template_wucjydw',   // Your EmailJS template ID
                 emailData,
-                'YOUR_PUBLIC_KEY'     // Your EmailJS public key
+                '-GonV4jpuu4FyT4pz'     // Your EmailJS public key
             );
 
             console.log('Email notification sent successfully:', response);
@@ -634,7 +634,7 @@ document.head.appendChild(style);
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize EmailJS (make sure it's loaded)
     if (typeof emailjs !== 'undefined') {
-        emailjs.init('YOUR_PUBLIC_KEY'); // Replace with your actual public key
+        emailjs.init('-GonV4jpuu4FyT4pz'); // Replace with your actual public key
         console.log('EmailJS initialized successfully');
     } else {
         console.warn('EmailJS not loaded - email notifications will not work');

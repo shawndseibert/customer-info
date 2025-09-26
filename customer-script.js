@@ -290,7 +290,7 @@ class CustomerQuoteForm {
 
         try {
             // Replace 'YOUR_GOOGLE_SCRIPT_URL' with your actual Google Apps Script Web App URL
-            const response = await fetch('https://script.google.com/macros/s/AKfycby6DNNchQo7KSFGaLmdepm-3l4KjgTFgfDDwAckLn2tP9X0YK8JO0ycrr5rZkitf2qsBQ/exec', {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbyV2r83thyozWf01rtz_KoOEf7kqznGhNT4cvr6sApwoRzWyc4weJ-5kkDTwaG0rMCd6g/exec', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

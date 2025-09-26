@@ -36,6 +36,11 @@ class CustomerManager {
             this.filterCustomers();
         });
 
+        // Priority filter
+        document.getElementById('priorityFilter').addEventListener('change', () => {
+            this.filterCustomers();
+        });
+
         // Export data
         document.getElementById('exportData').addEventListener('click', () => {
             this.exportData();
@@ -52,9 +57,30 @@ class CustomerManager {
         });
 
         // Generate test customer
-        document.getElementById('generateTestCustomer').addEventListener('click', () => {
-            this.generateTestCustomer();
-        });
+        const testCustomerIcon = document.getElementById('generateTestCustomer');
+        if (testCustomerIcon) {
+            console.log('Test customer icon found, adding click listener');
+            console.log('Icon element:', testCustomerIcon);
+            
+            // Add multiple event listeners to debug
+            testCustomerIcon.addEventListener('click', (e) => {
+                console.log('CLICK EVENT FIRED!', e);
+                e.preventDefault();
+                e.stopPropagation();
+                this.generateTestCustomer();
+            });
+            
+            testCustomerIcon.addEventListener('mousedown', (e) => {
+                console.log('MOUSEDOWN EVENT FIRED!', e);
+            });
+            
+            testCustomerIcon.addEventListener('mouseup', (e) => {
+                console.log('MOUSEUP EVENT FIRED!', e);
+            });
+            
+        } else {
+            console.error('Test customer icon not found!');
+        }
 
         // Modal events
         document.querySelector('.close').addEventListener('click', () => {
@@ -90,6 +116,146 @@ class CustomerManager {
 
         // Load auto-saved data on page load
         this.loadAutoSavedData();
+
+        // Bind stat card click events for filtering
+        this.bindStatCardEvents();
+
+        // Initialize theme toggle
+        this.initializeThemeIntegration();
+    }
+
+    // Bind stat card click events for filtering
+    bindStatCardEvents() {
+        const statCards = document.querySelectorAll('.clickable-stat');
+        statCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const filterValue = card.getAttribute('data-filter');
+                this.filterCustomersByStatCard(filterValue, card);
+            });
+        });
+
+        // Bind priority card click events
+        const priorityCards = document.querySelectorAll('.clickable-priority');
+        priorityCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const priorityValue = card.getAttribute('data-priority');
+                this.filterCustomersByPriority(priorityValue, card);
+            });
+        });
+    }
+
+    // Filter customers based on stat card selection
+    filterCustomersByStatCard(filterValue, clickedCard) {
+        // Update the status filter dropdown
+        const statusFilter = document.getElementById('statusFilter');
+        
+        // Remove active class from all stat cards
+        document.querySelectorAll('.clickable-stat').forEach(card => {
+            card.classList.remove('active');
+        });
+        
+        // Add active class to clicked card
+        clickedCard.classList.add('active');
+        
+        // Set the filter dropdown value and trigger filtering
+        if (filterValue === '') {
+            // Show all customers - reset both status and priority filters
+            statusFilter.value = '';
+            const priorityFilter = document.getElementById('priorityFilter');
+            priorityFilter.value = '';
+            // Remove active class from all priority cards too
+            document.querySelectorAll('.clickable-priority').forEach(card => {
+                card.classList.remove('active');
+            });
+            this.showNotification('Showing all customers', 'info');
+        } else if (filterValue === 'in-progress,scheduled') {
+            // Active projects: in-progress and scheduled
+            statusFilter.value = 'in-progress'; // Set to one of the active statuses
+            this.filterCustomersByMultipleStatuses(['in-progress', 'scheduled']);
+            this.showNotification('Showing active projects (In Progress & Scheduled)', 'info');
+            return; // Skip the normal filtering since we're doing custom multi-status filtering
+        } else {
+            // Single status filter
+            statusFilter.value = filterValue;
+            const statusLabels = {
+                'completed': 'completed projects',
+                'follow-up': 'customers needing follow-up'
+            };
+            this.showNotification(`Showing ${statusLabels[filterValue] || filterValue}`, 'info');
+        }
+        
+        // Trigger the normal filter function
+        this.filterCustomers();
+    }
+
+    // Filter customers by multiple statuses (for active projects)
+    filterCustomersByMultipleStatuses(statuses) {
+        const customers = this.getAllCustomers();
+        const filteredCustomers = customers.filter(customer => 
+            statuses.includes(customer.status)
+        );
+        this.displayCustomers(filteredCustomers);
+    }
+
+    // Filter customers by priority
+    filterCustomersByPriority(priorityValue, clickedCard) {
+        // Update the priority filter dropdown
+        const priorityFilter = document.getElementById('priorityFilter');
+        
+        // Remove active class from all priority cards
+        document.querySelectorAll('.clickable-priority').forEach(card => {
+            card.classList.remove('active');
+        });
+        
+        // Add active class to clicked card
+        clickedCard.classList.add('active');
+        
+        // Set the priority filter dropdown value and trigger filtering
+        priorityFilter.value = priorityValue;
+        
+        const priorityLabels = {
+            'emergency': 'emergency priority customers',
+            'high': 'high priority customers',
+            'medium': 'medium priority customers',
+            'low': 'low priority customers'
+        };
+        
+        this.showNotification(`Showing ${priorityLabels[priorityValue]}`, 'info');
+        
+        // Trigger the normal filter function
+        this.filterCustomers();
+    }
+
+    // Initialize theme toggle functionality
+    initializeThemeIntegration() {
+        // Listen for theme changes from the universal theme manager
+        window.addEventListener('themeChanged', (e) => {
+            const { theme, preference } = e.detail;
+            let message;
+            
+            switch (preference) {
+                case 'auto':
+                    message = `Auto theme (currently ${theme})`;
+                    break;
+                case 'light':
+                    message = 'Light theme';
+                    break;
+                case 'dark':
+                    message = 'Dark theme';
+                    break;
+            }
+            
+            if (message) {
+                this.showNotification(message, 'info');
+            }
+        });
+        
+        // Migrate old theme preference to new system
+        const oldTheme = localStorage.getItem('adminTheme');
+        if (oldTheme && oldTheme !== 'auto') {
+            localStorage.setItem('themePreference', oldTheme);
+            localStorage.removeItem('adminTheme');
+        }
     }
 
     // Form Validation
@@ -237,8 +403,7 @@ class CustomerManager {
 
         this.clearForm();
         this.clearAutoSavedData();
-        this.renderCustomers();
-        this.updateStats();
+        // Note: renderCustomers() and updateStats() are now called by saveCustomers()
     }
 
     getFormData() {
@@ -298,8 +463,7 @@ class CustomerManager {
             this.customers = this.customers.filter(c => c.id !== this.currentEditingId);
             this.saveCustomers();
             this.closeModal();
-            this.renderCustomers();
-            this.updateStats();
+            // Note: renderCustomers() and updateStats() are now called by saveCustomers()
             this.showNotification('Customer deleted successfully', 'success');
         }
     }
@@ -311,7 +475,7 @@ class CustomerManager {
             this.customers[customerIndex].status = newStatus;
             this.customers[customerIndex].updatedAt = new Date().toISOString();
             this.saveCustomers();
-            this.updateStats();
+            // Note: renderCustomers() and updateStats() are now called by saveCustomers()
             this.showNotification(`Status updated to "${this.getStatusLabel(newStatus)}"`, 'success');
         }
     }
@@ -368,6 +532,9 @@ class CustomerManager {
 
     saveCustomers() {
         localStorage.setItem('customers', JSON.stringify(this.customers));
+        // Refresh customer display to update colors
+        this.renderCustomers();
+        this.updateStats();
     }
 
     // Rendering
@@ -413,7 +580,7 @@ class CustomerManager {
         const statusClass = `status-${customer.status || 'initial'}`;
         
         return `
-            <div class="customer-card" data-customer-id="${customer.id}">
+            <div class="customer-card" data-customer-id="${customer.id}" data-priority="${customer.priority || 'medium'}" data-status="${customer.status || 'initial'}">
                 <div class="priority-badge ${priorityClass}">
                     ${(customer.priority || 'medium').toUpperCase()}
                 </div>
@@ -458,6 +625,7 @@ class CustomerManager {
     getFilteredCustomers() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const statusFilter = document.getElementById('statusFilter').value;
+        const priorityFilter = document.getElementById('priorityFilter').value;
 
         return this.customers.filter(customer => {
             const matchesSearch = !searchTerm || 
@@ -469,8 +637,9 @@ class CustomerManager {
                 this.getServiceTypeLabel(customer.serviceType).toLowerCase().includes(searchTerm);
 
             const matchesStatus = !statusFilter || customer.status === statusFilter;
+            const matchesPriority = !priorityFilter || customer.priority === priorityFilter;
 
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesStatus && matchesPriority;
         }).sort((a, b) => {
             // Sort by priority first, then by creation date
             const priorityOrder = { emergency: 4, high: 3, medium: 2, low: 1 };
@@ -655,10 +824,53 @@ class CustomerManager {
         const completedProjects = this.customers.filter(c => c.status === 'completed').length;
         const followUpNeeded = this.customers.filter(c => c.status === 'follow-up').length;
 
+        // Update main stats
         document.getElementById('totalCustomers').textContent = totalCustomers;
         document.getElementById('activeProjects').textContent = activeProjects;
         document.getElementById('completedProjects').textContent = completedProjects;
         document.getElementById('followUpNeeded').textContent = followUpNeeded;
+
+        // Update status breakdown
+        const statusCounts = {
+            initial: this.customers.filter(c => c.status === 'initial').length,
+            quoted: this.customers.filter(c => c.status === 'quoted').length,
+            scheduled: this.customers.filter(c => c.status === 'scheduled').length,
+            inProgress: this.customers.filter(c => c.status === 'in-progress').length,
+            completed: this.customers.filter(c => c.status === 'completed').length,
+            followUp: this.customers.filter(c => c.status === 'follow-up').length
+        };
+
+        // Update status elements
+        const statusElement = (id, count) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = count;
+        };
+
+        statusElement('statusInitial', statusCounts.initial);
+        statusElement('statusQuoted', statusCounts.quoted);
+        statusElement('statusScheduled', statusCounts.scheduled);
+        statusElement('statusInProgress', statusCounts.inProgress);
+        statusElement('statusCompleted', statusCounts.completed);
+        statusElement('statusFollowUp', statusCounts.followUp);
+
+        // Update priority breakdown
+        const priorityCounts = {
+            emergency: this.customers.filter(c => c.priority === 'emergency').length,
+            high: this.customers.filter(c => c.priority === 'high').length,
+            medium: this.customers.filter(c => c.priority === 'medium').length,
+            low: this.customers.filter(c => c.priority === 'low').length
+        };
+
+        // Update priority elements
+        const priorityElement = (id, count) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = count;
+        };
+
+        priorityElement('priorityEmergency', priorityCounts.emergency);
+        priorityElement('priorityHigh', priorityCounts.high);
+        priorityElement('priorityMedium', priorityCounts.medium);
+        priorityElement('priorityLow', priorityCounts.low);
     }
 
     // Data Export
@@ -979,13 +1191,21 @@ class CustomerManager {
             }
 
         } catch (error) {
-            console.error('Google Sheets sync error:', error);
+            // Check if it's a CORS/localhost issue
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1' || 
+                               window.location.hostname === '';
             
-            // Show CSV import option immediately
-            this.showNotification(
-                'Automatic sync failed. You can manually import your Google Sheets data below.',
-                'info'
-            );
+            let message = 'Google Sheets automatic sync is not available.';
+            if (isLocalhost) {
+                console.info('Google Sheets sync disabled for local development - this is expected behavior.');
+                message += ' When running locally, please use the CSV import feature below to import your Google Sheets data.';
+            } else {
+                console.error('Google Sheets sync error:', error);
+                message += ' Please check your Google Apps Script setup or use the CSV import feature below.';
+            }
+            
+            this.showNotification(message, 'info');
             this.showCSVImportOption();
         }
     }
@@ -1229,6 +1449,16 @@ class CustomerManager {
     // JSONP method to bypass CORS
     fetchGoogleSheetsDataViaJSONP() {
         return new Promise((resolve, reject) => {
+            // Check if running locally
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1' || 
+                               window.location.hostname === '';
+            
+            if (isLocalhost) {
+                reject(new Error('Google Sheets sync is not available when running locally due to CORS restrictions. Please use the CSV import feature instead.'));
+                return;
+            }
+            
             // Create a unique callback name
             const callbackName = 'googleSheetsCallback_' + Date.now();
             
@@ -1253,7 +1483,7 @@ class CustomerManager {
             script.onerror = () => {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                reject(new Error('Failed to load Google Sheets data'));
+                reject(new Error('Failed to load Google Sheets data - the service may be unavailable'));
             };
             
             // Add script to trigger the request

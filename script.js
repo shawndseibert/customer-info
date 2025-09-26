@@ -913,20 +913,14 @@ class CustomerManager {
         this.showNotification('Syncing data from Google Sheets...', 'info');
         
         try {
-            const response = await fetch('https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hvc1naze7AxkYucd0A/exec?action=getData', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            // Use JSONP to bypass CORS restrictions
+            const data = await this.fetchGoogleSheetsDataViaJSONP();
             
-            if (data.status === 'success' && data.data && Array.isArray(data.data)) {
+            if (!data) {
+                throw new Error('No data received from Google Sheets');
+            }
+            
+            if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
                 let importedCount = 0;
                 let updatedCount = 0;
                 let skippedCount = 0;
@@ -981,10 +975,19 @@ class CustomerManager {
 
         } catch (error) {
             console.error('Google Sheets sync error:', error);
-            this.showNotification(
-                'Failed to sync from Google Sheets. Please check your connection and try again.',
-                'error'
-            );
+            
+            // Try alternative method
+            try {
+                this.showNotification('Trying alternative sync method...', 'info');
+                await this.syncViaManualCSVImport();
+            } catch (altError) {
+                console.error('Alternative sync method failed:', altError);
+                this.showNotification(
+                    'Google Sheets sync failed. You can manually export your sheet as CSV and import it below.',
+                    'warning'
+                );
+                this.showCSVImportOption();
+            }
         }
     }
 
@@ -1020,6 +1023,238 @@ class CustomerManager {
             'emergency': 'emergency'
         };
         return urgencyMap[urgency] || 'medium';
+    }
+
+    // JSONP method to bypass CORS
+    fetchGoogleSheetsDataViaJSONP() {
+        return new Promise((resolve, reject) => {
+            // Create a unique callback name
+            const callbackName = 'googleSheetsCallback_' + Date.now();
+            
+            // Create script tag for JSONP
+            const script = document.createElement('script');
+            script.src = `https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hfc1naze7AxkYucd0A/exec?action=getData&callback=${callbackName}`;
+            
+            // Set up callback function
+            window[callbackName] = (data) => {
+                // Clean up
+                document.head.removeChild(script);
+                delete window[callbackName];
+                
+                if (data && data.status === 'success') {
+                    resolve(data);
+                } else {
+                    reject(new Error('Invalid response from Google Sheets'));
+                }
+            };
+            
+            // Handle script loading errors
+            script.onerror = () => {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Failed to load Google Sheets data'));
+            };
+            
+            // Add script to trigger the request
+            document.head.appendChild(script);
+            
+            // Set timeout
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('Google Sheets request timed out'));
+                }
+            }, 15000); // 15 second timeout
+        });
+    }
+
+    // Alternative method using iframe for CORS-free requests
+    async fetchGoogleSheetsDataViaIframe() {
+        return new Promise((resolve, reject) => {
+            // Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = `https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hvc1naze7AxkYucd0A/exec?action=getData&format=html`;
+            
+            let timeoutId;
+            
+            iframe.onload = () => {
+                try {
+                    // Try to access iframe content (will work if same-origin or properly configured)
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const content = iframeDoc.body.textContent || iframeDoc.body.innerText;
+                    
+                    if (content) {
+                        const data = JSON.parse(content);
+                        resolve(data);
+                    } else {
+                        reject(new Error('No data found in response'));
+                    }
+                } catch (error) {
+                    console.warn('Iframe method failed:', error);
+                    reject(error);
+                } finally {
+                    clearTimeout(timeoutId);
+                    document.body.removeChild(iframe);
+                }
+            };
+            
+            iframe.onerror = () => {
+                clearTimeout(timeoutId);
+                document.body.removeChild(iframe);
+                reject(new Error('Failed to load Google Sheets data via iframe'));
+            };
+            
+            // Set timeout
+            timeoutId = setTimeout(() => {
+                document.body.removeChild(iframe);
+                reject(new Error('Request timed out'));
+            }, 10000);
+            
+            document.body.appendChild(iframe);
+        });
+    }
+
+    // Fallback CSV import method
+    async syncViaManualCSVImport() {
+        // This is a placeholder - in reality we'd need manual CSV upload
+        throw new Error('Manual CSV import not implemented yet');
+    }
+
+    showCSVImportOption() {
+        // Create a temporary import option
+        const importDiv = document.createElement('div');
+        importDiv.innerHTML = `
+            <div style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <h4 style="color: #2d3748; margin-bottom: 12px;">📊 Manual Import Option</h4>
+                <p style="color: #4a5568; margin-bottom: 12px;">Since automatic sync failed, you can manually import your Google Sheets data:</p>
+                <ol style="color: #4a5568; margin-bottom: 12px; padding-left: 20px;">
+                    <li>Open your Google Sheet</li>
+                    <li>Go to File → Download → Comma-separated values (.csv)</li>
+                    <li>Use the file input below to upload the CSV</li>
+                </ol>
+                <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom: 8px;">
+                <button onclick="window.customerManager.importCSVFile()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Import CSV</button>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: #e2e8f0; color: #4a5568; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px;">Cancel</button>
+            </div>
+        `;
+        
+        // Insert after the customer list controls
+        const controlsSection = document.querySelector('.customer-controls');
+        if (controlsSection) {
+            controlsSection.insertAdjacentElement('afterend', importDiv);
+        }
+    }
+
+    importCSVFile() {
+        const fileInput = document.getElementById('csvFileInput');
+        const file = fileInput?.files[0];
+        
+        if (!file) {
+            this.showNotification('Please select a CSV file first', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const csvData = e.target.result;
+                const rows = this.parseCSV(csvData);
+                const customerData = this.convertCSVToCustomers(rows);
+                
+                if (customerData.length > 0) {
+                    this.importCustomersFromCSV(customerData);
+                    // Remove the import option div
+                    document.querySelector('#csvFileInput').closest('div').remove();
+                } else {
+                    this.showNotification('No valid customer data found in CSV', 'warning');
+                }
+            } catch (error) {
+                console.error('CSV import error:', error);
+                this.showNotification('Failed to parse CSV file. Please check the format.', 'error');
+            }
+        };
+        
+        reader.readAsText(file);
+    }
+
+    parseCSV(csvText) {
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        const rows = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim()) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                rows.push(row);
+            }
+        }
+        
+        return rows;
+    }
+
+    convertCSVToCustomers(rows) {
+        return rows.map(row => {
+            return {
+                id: this.generateId(),
+                firstName: row['firstName'] || row['First Name'] || '',
+                lastName: row['lastName'] || row['Last Name'] || '',
+                phone: row['phone'] || row['Phone'] || '',
+                email: row['email'] || row['Email'] || '',
+                address: row['address'] || row['Address'] || '',
+                serviceType: row['serviceType'] || row['Service Type'] || '',
+                priority: this.mapUrgencyToPriority(row['urgency'] || row['Urgency']),
+                status: 'initial',
+                productDetails: row['description'] || row['Description'] || '',
+                budget: row['budget'] || row['Budget'] || '',
+                preferredDate: row['preferredDate'] || row['Preferred Date'] || '',
+                notes: row['additionalNotes'] || row['Additional Notes'] || row['Notes'] || '',
+                referralSource: row['heardAbout'] || row['Heard About'] || '',
+                createdAt: row['timestamp'] || row['Timestamp'] || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                meetingDate: '',
+                source: 'CSV Import'
+            };
+        }).filter(customer => customer.firstName && customer.phone); // Only valid entries
+    }
+
+    importCustomersFromCSV(customerData) {
+        let importedCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+
+        customerData.forEach(newCustomer => {
+            const existingIndex = this.customers.findIndex(c => c.phone === newCustomer.phone);
+            
+            if (existingIndex !== -1) {
+                // Update existing customer
+                this.customers[existingIndex] = { ...this.customers[existingIndex], ...newCustomer, id: this.customers[existingIndex].id };
+                updatedCount++;
+            } else {
+                // Add new customer
+                this.customers.push(newCustomer);
+                importedCount++;
+            }
+        });
+
+        if (importedCount > 0 || updatedCount > 0) {
+            this.saveCustomers();
+            this.renderCustomers();
+            this.updateStats();
+            
+            let message = [];
+            if (importedCount > 0) message.push(`${importedCount} new customers imported`);
+            if (updatedCount > 0) message.push(`${updatedCount} customers updated`);
+            
+            this.showNotification(`CSV import complete! ${message.join(', ')}.`, 'success');
+        } else {
+            this.showNotification('No new customer data found in CSV.', 'info');
+        }
     }
 
     // Notifications

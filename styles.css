@@ -397,6 +397,16 @@ header p {
     transform: translateY(-1px);
 }
 
+.btn-sheets-push {
+    background: #1e88e5;
+    color: white;
+}
+
+.btn-sheets-push:hover {
+    background: #1976d2;
+    transform: translateY(-1px);
+}
+
 .btn-test {
     background: linear-gradient(45deg, #f59e0b, #d97706);
     border: none;
@@ -1335,6 +1345,7 @@ body.dark-theme .btn-secondary:hover {
 body.dark-theme .btn-export,
 body.dark-theme .btn-import,
 body.dark-theme .btn-sheets,
+body.dark-theme .btn-sheets-push,
 body.dark-theme .btn-test {
     background: #2d3748;
     color: #f7fafc;
@@ -1343,7 +1354,8 @@ body.dark-theme .btn-test {
 
 body.dark-theme .btn-export:hover,
 body.dark-theme .btn-import:hover,
-body.dark-theme .btn-sheets:hover {
+body.dark-theme .btn-sheets:hover,
+body.dark-theme .btn-sheets-push:hover {
     background: #374151;
 }
 

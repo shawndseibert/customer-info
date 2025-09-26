@@ -56,6 +56,11 @@ class CustomerManager {
             this.syncFromGoogleSheets();
         });
 
+        // Push to Google Sheets
+        document.getElementById('pushToGoogleSheets').addEventListener('click', () => {
+            this.pushAllToGoogleSheets();
+        });
+
         // Generate test customer
         const testCustomerIcon = document.getElementById('generateTestCustomer');
         if (testCustomerIcon) {
@@ -1307,6 +1312,45 @@ class CustomerManager {
             
             document.head.appendChild(script);
         });
+    }
+
+    // Push all local customers TO Google Sheets
+    async pushAllToGoogleSheets() {
+        if (this.customers.length === 0) {
+            this.showNotification('No customers to push to Google Sheets.', 'info');
+            return;
+        }
+
+        this.showNotification(`Pushing ${this.customers.length} customers to Google Sheets...`, 'info');
+        
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const customer of this.customers) {
+            try {
+                const success = await this.sendCustomerToGoogleSheets(customer);
+                if (success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+                
+                // Small delay between requests to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+                console.error('Error pushing customer:', customer.id, error);
+                errorCount++;
+            }
+        }
+
+        // Show results
+        if (successCount > 0 && errorCount === 0) {
+            this.showNotification(`✅ Successfully pushed all ${successCount} customers to Google Sheets!`, 'success');
+        } else if (successCount > 0 && errorCount > 0) {
+            this.showNotification(`⚠️ Pushed ${successCount} customers, ${errorCount} failed. Check console for details.`, 'warning');
+        } else {
+            this.showNotification(`❌ Failed to push customers to Google Sheets. Check your connection.`, 'error');
+        }
     }
 
     convertSheetRowToCustomer(sheetRow) {

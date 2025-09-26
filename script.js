@@ -1281,11 +1281,13 @@ class CustomerManager {
                 city: customerData.city || '',
                 state: customerData.state || '',
                 zip: customerData.zip || '',
-                service: customerData.service || '',
+                service: customerData.serviceType || customerData.service || '',
                 status: customerData.status || '',
                 priority: customerData.priority || '',
-                notes: customerData.notes || '',
-                dateAdded: customerData.dateAdded || new Date().toISOString()
+                notes: customerData.notes || customerData.productDetails || '',
+                dateAdded: customerData.dateAdded || new Date().toISOString(),
+                budget: customerData.budget || '',
+                preferredDate: customerData.preferredDate || ''
             });
             
             script.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?${params.toString()}`;

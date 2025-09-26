@@ -1470,7 +1470,7 @@ class CustomerManager {
             
             // Create script tag for JSONP
             const script = document.createElement('script');
-            script.src = `https://script.google.com/macros/s/AKfycbx7bhYi55v8tcR0x9GGHUyyd14cK7wCVvnGHCRsGo_vB9qz2KHT6D-Au3S3-2Gn8psn7g/exec?action=getData&callback=${callbackName}`;
+            script.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=getData&callback=${callbackName}`;
             
             // Set up callback function
             window[callbackName] = (data) => {
@@ -1531,7 +1531,7 @@ class CustomerManager {
             // Create hidden iframe
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = `https://script.google.com/macros/s/AKfycbx7bhYi55v8tcR0x9GGHUyyd14cK7wCVvnGHCRsGo_vB9qz2KHT6D-Au3S3-2Gn8psn7g/exec?action=getData&format=html`;
+            iframe.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=getData&format=html`;
             
             let timeoutId;
             
@@ -1581,7 +1581,7 @@ class CustomerManager {
 
     // Test Google Apps Script URL accessibility
     async testGoogleSheetsURL() {
-        const testUrl = 'https://script.google.com/macros/s/AKfycbx7bhYi55v8tcR0x9GGHUyyd14cK7wCVvnGHCRsGo_vB9qz2KHT6D-Au3S3-2Gn8psn7g/exec?action=test';
+        const testUrl = 'https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=test';
         
         try {
             console.log('Testing Google Apps Script URL:', testUrl);

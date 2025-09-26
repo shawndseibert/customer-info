@@ -8,7 +8,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <!-- Password Protection Screen -->
+    <div id="passwordScreen" class="password-screen">
+        <div class="password-container">
+            <div class="password-header">
+                <i class="fas fa-shield-alt"></i>
+                <h2>Admin Access Required</h2>
+                <p>Enter password to access customer management system</p>
+            </div>
+            <div class="password-form">
+                <input type="password" id="adminPassword" placeholder="Enter admin password" autofocus>
+                <button onclick="checkPassword()" class="password-btn">
+                    <i class="fas fa-unlock"></i> Access Admin
+                </button>
+                <div id="passwordError" class="password-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="adminContent" style="display: none;">
         <header>
             <h1><i class="fas fa-door-open"></i> Customer Information Manager</h1>
             <p>Door & Window Services - Professional Customer Management</p>
@@ -230,6 +248,45 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Password protection for admin access
+        const ADMIN_PASSWORD = 'DoorWindow2024!'; // Change this to your desired password
+        
+        function checkPassword() {
+            const inputPassword = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('passwordError');
+            
+            if (inputPassword === ADMIN_PASSWORD) {
+                // Correct password - show admin content
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                
+                // Store authentication in session (will expire when browser closes)
+                sessionStorage.setItem('adminAuthenticated', 'true');
+            } else {
+                // Wrong password
+                errorDiv.textContent = 'Incorrect password. Please try again.';
+                errorDiv.style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+            }
+        }
+        
+        // Check if already authenticated when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+            }
+        });
+        
+        // Allow Enter key to submit password
+        document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    </script>
+    <script src="script.js"></script></script>
 </body>
 </html>

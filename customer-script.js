@@ -1,34 +1,220 @@
-// Google Places Autocomplete initialization
-let autocomplete;
+// Free Address Helper - No API Required
+class AddressHelper {
+    constructor() {
+        this.init();
+    }
 
-function initAutocomplete() {
-    try {
-        autocomplete = new google.maps.places.Autocomplete(
-            document.getElementById('address'),
+    init() {
+        this.bindLocationButton();
+        this.addAddressFormatting();
+    }
+
+    bindLocationButton() {
+        const locationBtn = document.getElementById('useMyLocation');
+        if (locationBtn) {
+            locationBtn.addEventListener('click', () => {
+                this.getUserLocation();
+            });
+        }
+    }
+
+    getUserLocation() {
+        const locationBtn = document.getElementById('useMyLocation');
+        
+        if (!navigator.geolocation) {
+            this.showLocationError('Geolocation is not supported by this browser.');
+            return;
+        }
+
+        // Show loading state
+        locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+        locationBtn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.handleLocationSuccess(position);
+            },
+            (error) => {
+                this.handleLocationError(error);
+            },
             {
-                types: ['address'],
-                componentRestrictions: { country: 'us' },
-                fields: ['formatted_address', 'address_components', 'geometry']
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 minutes
             }
         );
+    }
 
-        // Add listener for place selection
-        autocomplete.addListener('place_changed', function() {
-            const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                document.getElementById('address').value = place.formatted_address;
-                // Trigger input event to save form progress
-                document.getElementById('address').dispatchEvent(new Event('input'));
+    async handleLocationSuccess(position) {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+            // Use free reverse geocoding service
+            const address = await this.reverseGeocode(latitude, longitude);
+            const addressField = document.getElementById('address');
+            
+            if (address && addressField) {
+                addressField.value = address;
+                addressField.dispatchEvent(new Event('input')); // Trigger auto-save
+                this.showLocationSuccess('Address auto-filled using your location!');
+            } else {
+                this.showLocationError('Could not determine address from your location. Please enter manually.');
             }
-        });
-    } catch (error) {
-        console.log('Google Places API not available:', error);
-        // Fallback: address field will work as regular text input
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+            this.showLocationError('Could not determine address from your location. Please enter manually.');
+        }
+
+        this.resetLocationButton();
+    }
+
+    async reverseGeocode(lat, lon) {
+        try {
+            // Using Nominatim (OpenStreetMap) - completely free, no API key required
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+                {
+                    headers: {
+                        'User-Agent': 'Door-Window-Quote-Form/1.0'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Geocoding service unavailable');
+            }
+
+            const data = await response.json();
+            
+            if (data && data.display_name) {
+                // Parse the address components for a cleaner format
+                const address = data.address || {};
+                
+                let formattedAddress = '';
+                if (address.house_number && address.road) {
+                    formattedAddress += `${address.house_number} ${address.road}`;
+                } else if (address.road) {
+                    formattedAddress += address.road;
+                }
+                
+                if (address.city || address.town || address.village) {
+                    formattedAddress += `, ${address.city || address.town || address.village}`;
+                }
+                
+                if (address.state) {
+                    formattedAddress += `, ${address.state}`;
+                }
+                
+                if (address.postcode) {
+                    formattedAddress += ` ${address.postcode}`;
+                }
+
+                return formattedAddress || data.display_name;
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+            return null;
+        }
+    }
+
+    handleLocationError(error) {
+        let message = 'Unable to get your location. ';
+        
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                message += 'Please allow location access and try again.';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                message += 'Location information is unavailable.';
+                break;
+            case error.TIMEOUT:
+                message += 'Location request timed out.';
+                break;
+            default:
+                message += 'An unknown error occurred.';
+                break;
+        }
+
+        this.showLocationError(message);
+        this.resetLocationButton();
+    }
+
+    resetLocationButton() {
+        const locationBtn = document.getElementById('useMyLocation');
+        if (locationBtn) {
+            locationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Use My Location';
+            locationBtn.disabled = false;
+        }
+    }
+
+    showLocationSuccess(message) {
+        this.showLocationMessage(message, 'success');
+    }
+
+    showLocationError(message) {
+        this.showLocationMessage(message, 'error');
+    }
+
+    showLocationMessage(message, type) {
+        // Create temporary notification
+        const notification = document.createElement('div');
+        notification.className = `location-notification ${type}`;
+        notification.textContent = message;
+        
+        // Style the notification
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#48bb78' : '#e53e3e'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+            font-size: 0.9rem;
+        `;
+
+        document.body.appendChild(notification);
+
+        // Remove after 4 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    addAddressFormatting() {
+        const addressField = document.getElementById('address');
+        if (addressField) {
+            // Add helpful placeholder examples
+            addressField.addEventListener('focus', () => {
+                if (!addressField.value) {
+                    addressField.placeholder = 'Example: 123 Main Street, Anytown, CA 12345';
+                }
+            });
+
+            addressField.addEventListener('blur', () => {
+                if (!addressField.value) {
+                    addressField.placeholder = 'Enter your full street address, city, state, and ZIP code';
+                }
+            });
+        }
     }
 }
 
-// Fallback function if Google Maps fails to load
-window.initAutocomplete = initAutocomplete;
+// Initialize the address helper
+document.addEventListener('DOMContentLoaded', () => {
+    new AddressHelper();
+});
 
 // Customer Quote Form Management
 class CustomerQuoteForm {

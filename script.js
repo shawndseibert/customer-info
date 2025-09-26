@@ -46,6 +46,11 @@ class CustomerManager {
             this.importCustomerSubmissions();
         });
 
+        // Import from Google Sheets
+        document.getElementById('syncGoogleSheets').addEventListener('click', () => {
+            this.syncFromGoogleSheets();
+        });
+
         // Modal events
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -294,6 +299,62 @@ class CustomerManager {
         }
     }
 
+    // Quick Actions
+    updateCustomerStatus(customerId, newStatus) {
+        const customerIndex = this.customers.findIndex(c => c.id === customerId);
+        if (customerIndex !== -1) {
+            this.customers[customerIndex].status = newStatus;
+            this.customers[customerIndex].updatedAt = new Date().toISOString();
+            this.saveCustomers();
+            this.updateStats();
+            this.showNotification(`Status updated to "${this.getStatusLabel(newStatus)}"`, 'success');
+        }
+    }
+
+    quickEdit(customerId) {
+        this.currentEditingId = customerId;
+        const customer = this.customers.find(c => c.id === customerId);
+        if (customer) {
+            this.populateForm(customer);
+            document.getElementById('customerForm').scrollIntoView({ behavior: 'smooth' });
+            
+            // Update form button text
+            const submitBtn = document.querySelector('#customerForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Customer';
+            }
+            
+            // Update form title
+            const formTitle = document.querySelector('.form-section h2');
+            if (formTitle) {
+                formTitle.innerHTML = `<i class="fas fa-user-edit"></i> Edit ${customer.firstName} ${customer.lastName}`;
+            }
+        }
+    }
+
+    markContacted(customerId) {
+        const customerIndex = this.customers.findIndex(c => c.id === customerId);
+        if (customerIndex !== -1) {
+            const customer = this.customers[customerIndex];
+            const currentDate = new Date().toISOString();
+            
+            // Update status if it's still initial
+            if (customer.status === 'initial' || !customer.status) {
+                customer.status = 'quoted';
+            }
+            
+            // Add contact note
+            const contactNote = `Contacted on ${new Date().toLocaleDateString()}`;
+            customer.notes = customer.notes ? `${customer.notes} | ${contactNote}` : contactNote;
+            customer.updatedAt = currentDate;
+            
+            this.saveCustomers();
+            this.renderCustomers();
+            this.updateStats();
+            this.showNotification(`${customer.firstName} ${customer.lastName} marked as contacted`, 'success');
+        }
+    }
+
     // Data Storage
     loadCustomers() {
         const stored = localStorage.getItem('customers');
@@ -330,6 +391,15 @@ class CustomerManager {
                 this.showCustomerDetails(customerId);
             });
         });
+
+        // Add status change event listeners
+        customerList.querySelectorAll('.quick-status-update').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const customerId = e.target.dataset.customerId;
+                const newStatus = e.target.value;
+                this.updateCustomerStatus(customerId, newStatus);
+            });
+        });
     }
 
     createCustomerCard(customer) {
@@ -351,12 +421,30 @@ class CustomerManager {
                 </div>
                 <div class="customer-details">
                     <div><strong>Email:</strong> ${customer.email || 'Not provided'}</div>
-                    <div><strong>Status:</strong> <span class="status-badge ${statusClass}">${this.getStatusLabel(customer.status)}</span></div>
+                    <div class="status-row">
+                        <strong>Status:</strong> 
+                        <select class="quick-status-update" data-customer-id="${customer.id}" onclick="event.stopPropagation()">
+                            <option value="initial" ${(customer.status || 'initial') === 'initial' ? 'selected' : ''}>Initial Contact</option>
+                            <option value="quoted" ${customer.status === 'quoted' ? 'selected' : ''}>Quote Provided</option>
+                            <option value="scheduled" ${customer.status === 'scheduled' ? 'selected' : ''}>Work Scheduled</option>
+                            <option value="in-progress" ${customer.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="completed" ${customer.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="follow-up" ${customer.status === 'follow-up' ? 'selected' : ''}>Follow-up Needed</option>
+                        </select>
+                    </div>
                     <div><strong>Budget:</strong> ${this.getBudgetLabel(customer.budget)}</div>
                     <div><strong>Added:</strong> ${createdDate}</div>
                 </div>
                 ${customer.notes ? `<div class="customer-notes">"${customer.notes}"</div>` : ''}
                 ${customer.meetingDate ? `<div class="customer-meeting"><strong>Next Meeting:</strong> ${new Date(customer.meetingDate).toLocaleString()}</div>` : ''}
+                <div class="customer-actions" onclick="event.stopPropagation()">
+                    <button class="action-btn edit-btn" onclick="window.customerManager.quickEdit('${customer.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="action-btn contact-btn" onclick="window.customerManager.markContacted('${customer.id}')">
+                        <i class="fas fa-phone"></i> Mark Contacted
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -495,14 +583,22 @@ class CustomerManager {
         const customer = this.customers.find(c => c.id === this.currentEditingId);
         if (customer) {
             this.populateForm(customer);
-            this.closeModal();
+            this.closeModal(false); // Don't clear editing ID when closing modal for editing
             document.getElementById('customerForm').scrollIntoView({ behavior: 'smooth' });
+            
+            // Update form button text to show we're editing
+            const submitBtn = document.querySelector('#customerForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Customer';
+            }
         }
     }
 
-    closeModal() {
+    closeModal(clearEditingId = true) {
         document.getElementById('customerModal').style.display = 'none';
-        this.currentEditingId = null;
+        if (clearEditingId) {
+            this.currentEditingId = null;
+        }
     }
 
     // Form Management
@@ -810,6 +906,120 @@ class CustomerManager {
             'other': 'Other'
         };
         return labels[value] || 'Not specified';
+    }
+
+    // Google Sheets Integration
+    async syncFromGoogleSheets() {
+        this.showNotification('Syncing data from Google Sheets...', 'info');
+        
+        try {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hvc1naze7AxkYucd0A/exec?action=getData', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.data && Array.isArray(data.data)) {
+                let importedCount = 0;
+                let updatedCount = 0;
+                let skippedCount = 0;
+
+                data.data.forEach(sheetRow => {
+                    if (!sheetRow.firstName || !sheetRow.phone) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    // Check if customer already exists by phone number
+                    const existingCustomerIndex = this.customers.findIndex(c => c.phone === sheetRow.phone);
+                    
+                    const customerData = this.convertSheetRowToCustomer(sheetRow);
+
+                    if (existingCustomerIndex !== -1) {
+                        // Update existing customer if the sheet data is newer
+                        const existingCustomer = this.customers[existingCustomerIndex];
+                        const sheetDate = new Date(sheetRow.timestamp || sheetRow.createdAt || 0);
+                        const existingDate = new Date(existingCustomer.updatedAt || existingCustomer.createdAt || 0);
+                        
+                        if (sheetDate > existingDate) {
+                            this.customers[existingCustomerIndex] = { ...existingCustomer, ...customerData, id: existingCustomer.id };
+                            updatedCount++;
+                        } else {
+                            skippedCount++;
+                        }
+                    } else {
+                        // Add new customer
+                        this.customers.push(customerData);
+                        importedCount++;
+                    }
+                });
+
+                if (importedCount > 0 || updatedCount > 0) {
+                    this.saveCustomers();
+                    this.renderCustomers(); 
+                    this.updateStats();
+                    
+                    let message = [];
+                    if (importedCount > 0) message.push(`${importedCount} new leads imported`);
+                    if (updatedCount > 0) message.push(`${updatedCount} leads updated`);
+                    if (skippedCount > 0) message.push(`${skippedCount} duplicates/older records skipped`);
+                    
+                    this.showNotification(`Google Sheets sync complete! ${message.join(', ')}.`, 'success');
+                } else {
+                    this.showNotification('No new data found in Google Sheets.', 'info');
+                }
+            } else {
+                throw new Error('Invalid response format from Google Sheets');
+            }
+
+        } catch (error) {
+            console.error('Google Sheets sync error:', error);
+            this.showNotification(
+                'Failed to sync from Google Sheets. Please check your connection and try again.',
+                'error'
+            );
+        }
+    }
+
+    convertSheetRowToCustomer(sheetRow) {
+        return {
+            id: this.generateId(),
+            firstName: sheetRow.firstName || '',
+            lastName: sheetRow.lastName || '', 
+            phone: sheetRow.phone || '',
+            email: sheetRow.email || '',
+            address: sheetRow.address || '',
+            serviceType: sheetRow.serviceType || '',
+            priority: this.mapUrgencyToPriority(sheetRow.urgency),
+            status: 'initial',
+            productDetails: sheetRow.description || '',
+            budget: sheetRow.budget || '', 
+            preferredDate: sheetRow.preferredDate || '',
+            notes: sheetRow.additionalNotes || '',
+            referralSource: sheetRow.heardAbout || '',
+            createdAt: sheetRow.timestamp || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            meetingDate: '',
+            source: 'Customer Form'
+        };
+    }
+
+    mapUrgencyToPriority(urgency) {
+        const urgencyMap = {
+            'flexible': 'low',
+            'month': 'low', 
+            'weeks': 'medium',
+            'urgent': 'high',
+            'emergency': 'emergency'
+        };
+        return urgencyMap[urgency] || 'medium';
     }
 
     // Notifications

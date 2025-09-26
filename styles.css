@@ -504,6 +504,72 @@ header p {
     100% { transform: scale(1); }
 }
 
+/* Quick Status Update */
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-status-update {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-status-update:hover {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.quick-status-update:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Customer Actions */
+.customer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-btn:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.contact-btn {
+    background: #48bb78;
+}
+
+.action-btn.contact-btn:hover {
+    background: #38a169;
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
 /* Statistics Section */
 .stats-section {
     background: white;

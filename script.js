@@ -448,6 +448,9 @@ class CustomerManager {
     addCustomer(customerData) {
         this.customers.push(customerData);
         this.saveCustomers();
+        
+        // Automatically sync new customer to Google Sheets
+        this.syncToGoogleSheets(customerData);
     }
 
     updateCustomer(id, customerData) {
@@ -1211,6 +1214,97 @@ class CustomerManager {
             // Test URL accessibility for debugging
             this.testGoogleSheetsURL();
         }
+    }
+
+    // Sync new customer TO Google Sheets
+    async syncToGoogleSheets(customerData) {
+        try {
+            // Don't sync if running locally
+            if (window.location.protocol === 'file:') {
+                console.info('Google Sheets sync disabled for local development');
+                return;
+            }
+
+            console.log('Syncing new customer to Google Sheets:', customerData);
+            
+            // Use JSONP to send data to Google Apps Script
+            const success = await this.sendCustomerToGoogleSheets(customerData);
+            
+            if (success) {
+                this.showNotification('Customer synced to Google Sheets!', 'success');
+            } else {
+                console.warn('Failed to sync customer to Google Sheets');
+                this.showNotification('Customer saved locally. Google Sheets sync failed.', 'warning');
+            }
+        } catch (error) {
+            console.error('Error syncing to Google Sheets:', error);
+            this.showNotification('Customer saved locally. Google Sheets sync failed.', 'warning');
+        }
+    }
+
+    sendCustomerToGoogleSheets(customerData) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'googleSheetsAddCallback_' + Date.now();
+            
+            // Create global callback
+            window[callbackName] = (response) => {
+                console.log('Google Sheets add response:', response);
+                cleanup();
+                
+                if (response && response.status === 'success') {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            };
+            
+            const cleanup = () => {
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            };
+            
+            // Create script element for JSONP
+            const script = document.createElement('script');
+            
+            // Prepare customer data as URL parameters
+            const params = new URLSearchParams({
+                action: 'addCustomer',
+                callback: callbackName,
+                id: customerData.id,
+                firstName: customerData.firstName || '',
+                lastName: customerData.lastName || '',
+                phone: customerData.phone || '',
+                email: customerData.email || '',
+                address: customerData.address || '',
+                city: customerData.city || '',
+                state: customerData.state || '',
+                zip: customerData.zip || '',
+                service: customerData.service || '',
+                status: customerData.status || '',
+                priority: customerData.priority || '',
+                notes: customerData.notes || '',
+                dateAdded: customerData.dateAdded || new Date().toISOString()
+            });
+            
+            script.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?${params.toString()}`;
+            
+            script.onerror = () => {
+                console.error('Failed to load Google Apps Script for adding customer');
+                cleanup();
+                resolve(false);
+            };
+            
+            // Set timeout for request
+            setTimeout(() => {
+                console.warn('Google Sheets add request timed out');
+                cleanup();
+                resolve(false);
+            }, 10000); // 10 second timeout
+            
+            document.head.appendChild(script);
+        });
     }
 
     convertSheetRowToCustomer(sheetRow) {

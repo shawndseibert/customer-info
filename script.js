@@ -1202,11 +1202,14 @@ class CustomerManager {
                 message += ' When running locally, please use the CSV import feature below to import your Google Sheets data.';
             } else {
                 console.error('Google Sheets sync error:', error);
-                message += ' Please check your Google Apps Script setup or use the CSV import feature below.';
+                message += '\n\nTroubleshooting steps:\n1. Verify the Google Apps Script is deployed as a web app\n2. Ensure "Execute as: Me" and "Who has access: Anyone"\n3. Test the script URL directly in a browser\n4. Check script permissions and sharing settings\n\nAlternative: Use the CSV import feature below.';
             }
             
-            this.showNotification(message, 'info');
+            this.showNotification(message, 'warning');
             this.showCSVImportOption();
+            
+            // Test URL accessibility for debugging
+            this.testGoogleSheetsURL();
         }
     }
 
@@ -1462,6 +1465,9 @@ class CustomerManager {
             // Create a unique callback name
             const callbackName = 'googleSheetsCallback_' + Date.now();
             
+            console.log('Attempting to load Google Sheets data via JSONP...');
+            console.log('Callback name:', callbackName);
+            
             // Create script tag for JSONP
             const script = document.createElement('script');
             script.src = `https://script.google.com/macros/s/AKfycbx7bhYi55v8tcR0x9GGHUyyd14cK7wCVvnGHCRsGo_vB9qz2KHT6D-Au3S3-2Gn8psn7g/exec?action=getData&callback=${callbackName}`;
@@ -1479,12 +1485,31 @@ class CustomerManager {
                 }
             };
             
+            // Set up timeout (30 seconds)
+            const timeout = setTimeout(() => {
+                console.warn('Google Sheets request timed out');
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('Google Sheets request timed out. The script may be slow to respond or unavailable.'));
+            }, 30000);
+            
             // Handle script loading errors
-            script.onerror = () => {
+            script.onerror = (event) => {
+                console.error('Script loading error:', event);
+                clearTimeout(timeout);
                 document.head.removeChild(script);
                 delete window[callbackName];
                 reject(new Error('Google Sheets sync is currently unavailable. This may be due to:\n• Script not deployed or permissions changed\n• Network connectivity issues\n• Service temporarily down\n\nPlease use the CSV import/export feature as an alternative.'));
             };
+            
+            // Update callback to clear timeout
+            const originalCallback = window[callbackName];
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                if (originalCallback) originalCallback(data);
+            };
+            
+            console.log('Loading script:', script.src);
             
             // Add script to trigger the request
             document.head.appendChild(script);
@@ -1552,6 +1577,21 @@ class CustomerManager {
         // Show the CSV import option directly
         this.showCSVImportOption();
         return Promise.resolve(); // Don't throw error, just show the option
+    }
+
+    // Test Google Apps Script URL accessibility
+    async testGoogleSheetsURL() {
+        const testUrl = 'https://script.google.com/macros/s/AKfycbx7bhYi55v8tcR0x9GGHUyyd14cK7wCVvnGHCRsGo_vB9qz2KHT6D-Au3S3-2Gn8psn7g/exec?action=test';
+        
+        try {
+            console.log('Testing Google Apps Script URL:', testUrl);
+            const response = await fetch(testUrl, { mode: 'no-cors' });
+            console.log('Test response received (no-cors mode)');
+            return true;
+        } catch (error) {
+            console.error('URL test failed:', error);
+            return false;
+        }
     }
 
     showCSVImportOption() {

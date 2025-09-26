@@ -22,6 +22,11 @@
                     <i class="fas fa-unlock"></i> Access Admin
                 </button>
                 <div id="passwordError" class="password-error"></div>
+                <div id="forgotPin" class="forgot-pin" style="display: none;">
+                    <button onclick="resetTrustedDevice()" class="forgot-pin-btn">
+                        <i class="fas fa-key"></i> Use Full Password Instead
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -249,23 +254,43 @@
     </div>
 
     <script>
-        // Password protection for admin access
-        const ADMIN_PASSWORD = 'DoorWindow2024!'; // Change this to your desired password
+        // Two-tier security: Full password for new devices, PIN for trusted devices
+        const ADMIN_PASSWORD = 'Asdfghjkl1!'; // Full password for initial device setup
+        const ADMIN_PIN = '8888'; // Quick PIN for devices already authenticated
         
         function checkPassword() {
             const inputPassword = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('passwordError');
+            const isTrustedDevice = localStorage.getItem('trustedDevice') === 'true';
             
-            if (inputPassword === ADMIN_PASSWORD) {
-                // Correct password - show admin content
+            let isValid = false;
+            let authType = '';
+            
+            if (isTrustedDevice && inputPassword === ADMIN_PIN) {
+                // Trusted device using PIN
+                isValid = true;
+                authType = 'PIN';
+            } else if (inputPassword === ADMIN_PASSWORD) {
+                // New device or full password
+                isValid = true;
+                authType = 'PASSWORD';
+                // Mark this device as trusted for future PIN access
+                localStorage.setItem('trustedDevice', 'true');
+            }
+            
+            if (isValid) {
+                // Correct credentials - show admin content
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
                 
                 // Store authentication in session (will expire when browser closes)
                 sessionStorage.setItem('adminAuthenticated', 'true');
+                
+                console.log(`Admin access granted via ${authType}`);
             } else {
-                // Wrong password
-                errorDiv.textContent = 'Incorrect password. Please try again.';
+                // Wrong credentials
+                const expectedAuth = isTrustedDevice ? 'PIN (4 digits)' : 'password';
+                errorDiv.textContent = `Incorrect ${expectedAuth}. Please try again.`;
                 errorDiv.style.display = 'block';
                 document.getElementById('adminPassword').value = '';
                 document.getElementById('adminPassword').focus();
@@ -277,8 +302,46 @@
             if (sessionStorage.getItem('adminAuthenticated') === 'true') {
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
+            } else {
+                // Update UI based on device trust status
+                updatePasswordScreenUI();
             }
         });
+        
+        function updatePasswordScreenUI() {
+            const isTrustedDevice = localStorage.getItem('trustedDevice') === 'true';
+            const headerElement = document.querySelector('.password-header h2');
+            const descElement = document.querySelector('.password-header p');
+            const inputElement = document.getElementById('adminPassword');
+            const forgotPinElement = document.getElementById('forgotPin');
+            
+            if (isTrustedDevice) {
+                headerElement.textContent = 'Enter Your PIN';
+                descElement.textContent = 'Enter your 4-digit PIN to access admin panel';
+                inputElement.placeholder = 'Enter 4-digit PIN';
+                inputElement.maxLength = 4;
+                inputElement.pattern = '[0-9]{4}';
+                inputElement.inputMode = 'numeric';
+                forgotPinElement.style.display = 'block';
+            } else {
+                headerElement.textContent = 'Admin Access Required';
+                descElement.textContent = 'Enter password to access customer management system';
+                inputElement.placeholder = 'Enter admin password';
+                inputElement.removeAttribute('maxLength');
+                inputElement.removeAttribute('pattern');
+                inputElement.inputMode = 'text';
+                forgotPinElement.style.display = 'none';
+            }
+        }
+        
+        function resetTrustedDevice() {
+            // Remove trusted device status and refresh UI
+            localStorage.removeItem('trustedDevice');
+            updatePasswordScreenUI();
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('adminPassword').focus();
+        }
         
         // Allow Enter key to submit password
         document.getElementById('adminPassword').addEventListener('keypress', (e) => {

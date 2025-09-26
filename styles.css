@@ -110,6 +110,32 @@ body {
     font-size: 0.9rem;
 }
 
+.forgot-pin {
+    margin-top: 10px;
+}
+
+.forgot-pin-btn {
+    background: transparent;
+    color: #667eea;
+    border: 1px solid #667eea;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.forgot-pin-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-1px);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;

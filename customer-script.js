@@ -291,7 +291,7 @@ class CustomerQuoteForm {
             // Use form submission method to avoid CORS issues
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'https://script.google.com/macros/s/AKfycbyXDRZQbwaFS-_iQrmffwPy2WVnnRPT_sQWQGSx0MlIr3NNM7wdBhpLODm4XnDWCyr9_Q/exec';
+            form.action = 'https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hvc1naze7AxkYucd0A/exec';
             form.target = '_blank';
             form.style.display = 'none';
 

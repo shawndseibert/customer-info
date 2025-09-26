@@ -1483,7 +1483,7 @@ class CustomerManager {
             script.onerror = () => {
                 document.head.removeChild(script);
                 delete window[callbackName];
-                reject(new Error('Failed to load Google Sheets data - the service may be unavailable'));
+                reject(new Error('Google Sheets sync is currently unavailable. This may be due to:\n• Script not deployed or permissions changed\n• Network connectivity issues\n• Service temporarily down\n\nPlease use the CSV import/export feature as an alternative.'));
             };
             
             // Add script to trigger the request

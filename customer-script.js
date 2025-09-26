@@ -237,11 +237,17 @@ class CustomerQuoteForm {
         try {
             const formData = this.getFormData();
             
-            // Save to customer submissions
+            // Save to customer submissions (local backup)
             this.saveCustomerSubmission(formData);
             
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Send data to both Google Sheets and Email (parallel processing)
+            const promises = [
+                this.sendToGoogleSheets(formData),
+                this.sendEmailNotification(formData)
+            ];
+            
+            // Wait for both to complete (but don't fail if one fails)
+            await Promise.allSettled(promises);
             
             // Show success message
             this.showSuccessMessage(formData);
@@ -255,6 +261,94 @@ class CustomerQuoteForm {
         } finally {
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
+        }
+    }
+
+    async sendToGoogleSheets(formData) {
+        // Send customer data directly to Google Sheets
+        // You'll need to set up a Google Apps Script (instructions in GOOGLE-SHEETS-SETUP.md)
+        
+        const sheetData = {
+            timestamp: new Date(formData.timestamp).toLocaleString(),
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            email: formData.email || '',
+            address: formData.address,
+            serviceType: getServiceTypeLabel(formData.serviceType),
+            urgency: getUrgencyLabel(formData.urgency),
+            description: formData.description || '',
+            budget: getBudgetLabel(formData.budget),
+            preferredDate: formData.preferredDate || '',
+            contactPreference: getContactPreferenceLabel(formData.contactPreference),
+            contactTime: getContactTimeLabel(formData.contactTime),
+            heardAbout: getHeardAboutLabel(formData.heardAbout),
+            additionalNotes: formData.additionalNotes || '',
+            status: 'New Lead',
+            source: 'QR Code Form'
+        };
+
+        try {
+            // Replace 'YOUR_GOOGLE_SCRIPT_URL' with your actual Google Apps Script Web App URL
+            const response = await fetch('YOUR_GOOGLE_SCRIPT_URL', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(sheetData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save to Google Sheets');
+            }
+
+            console.log('Data saved to Google Sheets successfully');
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to save to Google Sheets:', error);
+            // Don't throw error - we still want to show success to customer
+            // Data is still saved locally as backup
+        }
+    }
+
+    async sendEmailNotification(formData) {
+        // Send instant email notification using EmailJS
+        // You'll need to set up EmailJS account and get your keys
+        
+        try {
+            const emailData = {
+                to_email: 'YOUR_EMAIL@gmail.com', // Replace with your email
+                customer_name: `${formData.firstName} ${formData.lastName}`,
+                customer_phone: formData.phone,
+                customer_email: formData.email || 'Not provided',
+                customer_address: formData.address,
+                service_type: getServiceTypeLabel(formData.serviceType),
+                urgency: getUrgencyLabel(formData.urgency),
+                description: formData.description || 'No description provided',
+                budget: getBudgetLabel(formData.budget),
+                preferred_date: formData.preferredDate || 'Not specified',
+                contact_preference: getContactPreferenceLabel(formData.contactPreference),
+                contact_time: getContactTimeLabel(formData.contactTime),
+                heard_about: getHeardAboutLabel(formData.heardAbout),
+                additional_notes: formData.additionalNotes || 'None',
+                submission_time: new Date(formData.timestamp).toLocaleString(),
+                form_source: 'QR Code Customer Form'
+            };
+
+            // Replace these with your actual EmailJS credentials
+            const response = await emailjs.send(
+                'YOUR_SERVICE_ID',    // Your EmailJS service ID
+                'YOUR_TEMPLATE_ID',   // Your EmailJS template ID
+                emailData,
+                'YOUR_PUBLIC_KEY'     // Your EmailJS public key
+            );
+
+            console.log('Email notification sent successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Failed to send email notification:', error);
+            // Don't throw error - we still want to show success to customer
+            // The form data is still saved to Google Sheets and locally
         }
     }
 
@@ -538,6 +632,14 @@ document.head.appendChild(style);
 
 // Initialize the customer form when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize EmailJS (make sure it's loaded)
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init('YOUR_PUBLIC_KEY'); // Replace with your actual public key
+        console.log('EmailJS initialized successfully');
+    } else {
+        console.warn('EmailJS not loaded - email notifications will not work');
+    }
+    
     window.customerQuoteForm = new CustomerQuoteForm();
     
     // Add keyboard shortcuts for admin access

@@ -191,6 +191,16 @@ header p {
     transform: translateY(-1px);
 }
 
+.btn-sheets {
+    background: #0f9d58;
+    color: white;
+}
+
+.btn-sheets:hover {
+    background: #0d8043;
+    transform: translateY(-1px);
+}
+
 .form-actions {
     display: flex;
     gap: 15px;

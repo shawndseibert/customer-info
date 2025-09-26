@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Information Manager - Door & Window Services</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-door-open"></i> Customer Information Manager</h1>
+            <p>Door & Window Services - Professional Customer Management</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Customer Form Section -->
+            <section class="form-section">
+                <h2><i class="fas fa-user-plus"></i> Add New Customer</h2>
+                <form id="customerForm" class="customer-form">
+                    <!-- Contact Information -->
+                    <div class="form-group">
+                        <h3><i class="fas fa-address-card"></i> Contact Information</h3>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="phone">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="address">Property Address</label>
+                            <textarea id="address" name="address" rows="2" placeholder="Street address, city, state, zip"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Service Requirements -->
+                    <div class="form-group">
+                        <h3><i class="fas fa-tools"></i> Service Requirements</h3>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="serviceType">Service Type *</label>
+                                <select id="serviceType" name="serviceType" required>
+                                    <option value="">Select Service Type</option>
+                                    <option value="new-doors">New Doors</option>
+                                    <option value="new-windows">New Windows</option>
+                                    <option value="door-replacement">Door Replacement</option>
+                                    <option value="window-replacement">Window Replacement</option>
+                                    <option value="door-parts">Door Replacement Parts</option>
+                                    <option value="window-parts">Window Replacement Parts</option>
+                                    <option value="repair">Repair Services</option>
+                                    <option value="consultation">Consultation Only</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="priority">Priority Level</label>
+                                <select id="priority" name="priority">
+                                    <option value="low">Low - No Rush</option>
+                                    <option value="medium" selected>Medium - Standard</option>
+                                    <option value="high">High - Urgent</option>
+                                    <option value="emergency">Emergency</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="productDetails">Product Details & Specifications</label>
+                            <textarea id="productDetails" name="productDetails" rows="3" placeholder="Describe the doors/windows needed, materials, sizes, colors, etc."></textarea>
+                        </div>
+                        <div class="form-field">
+                            <label for="budget">Estimated Budget Range</label>
+                            <select id="budget" name="budget">
+                                <option value="">Select Budget Range</option>
+                                <option value="under-500">Under $500</option>
+                                <option value="500-1000">$500 - $1,000</option>
+                                <option value="1000-2500">$1,000 - $2,500</option>
+                                <option value="2500-5000">$2,500 - $5,000</option>
+                                <option value="5000-10000">$5,000 - $10,000</option>
+                                <option value="over-10000">Over $10,000</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Project Details -->
+                    <div class="form-group">
+                        <h3><i class="fas fa-calendar-alt"></i> Project Timeline & Notes</h3>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="preferredDate">Preferred Start Date</label>
+                                <input type="date" id="preferredDate" name="preferredDate">
+                            </div>
+                            <div class="form-field">
+                                <label for="meetingDate">Follow-up Meeting</label>
+                                <input type="datetime-local" id="meetingDate" name="meetingDate">
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="notes">Additional Notes</label>
+                            <textarea id="notes" name="notes" rows="4" placeholder="Special requirements, access instructions, customer preferences, etc."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="referralSource">How did they find us?</label>
+                                <select id="referralSource" name="referralSource">
+                                    <option value="">Select Source</option>
+                                    <option value="google">Google Search</option>
+                                    <option value="referral">Customer Referral</option>
+                                    <option value="facebook">Facebook</option>
+                                    <option value="yellowpages">Yellow Pages</option>
+                                    <option value="flyer">Flyer/Advertisement</option>
+                                    <option value="repeat">Repeat Customer</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="status">Customer Status</label>
+                                <select id="status" name="status">
+                                    <option value="initial">Initial Contact</option>
+                                    <option value="quoted">Quote Provided</option>
+                                    <option value="scheduled">Work Scheduled</option>
+                                    <option value="in-progress">Work In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="follow-up">Needs Follow-up</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Customer Information
+                        </button>
+                        <button type="button" id="clearForm" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> Clear Form
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Customer Records Section -->
+            <section class="records-section">
+                <div class="records-header">
+                    <h2><i class="fas fa-users"></i> Customer Records</h2>
+                    <div class="records-controls">
+                        <div class="search-container">
+                            <input type="text" id="searchInput" placeholder="Search customers..." class="search-input">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <div class="filter-container">
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="initial">Initial Contact</option>
+                                <option value="quoted">Quote Provided</option>
+                                <option value="scheduled">Work Scheduled</option>
+                                <option value="in-progress">Work In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="follow-up">Needs Follow-up</option>
+                            </select>
+                        </div>
+                        <button id="exportData" class="btn btn-export">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="customerList" class="customer-list">
+                    <!-- Customer records will be displayed here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <section class="stats-section">
+            <h3><i class="fas fa-chart-bar"></i> Business Overview</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCustomers">0</div>
+                    <div class="stat-label">Total Customers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeProjects">0</div>
+                    <div class="stat-label">Active Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedProjects">0</div>
+                    <div class="stat-label">Completed Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="followUpNeeded">0</div>
+                    <div class="stat-label">Follow-ups Needed</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Customer Detail Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Customer Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Customer details will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <button id="editCustomer" class="btn btn-primary">Edit</button>
+                <button id="deleteCustomer" class="btn btn-danger">Delete</button>
+                <button id="closeModal" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

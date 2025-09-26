@@ -202,6 +202,9 @@
                         <button id="syncGoogleSheets" class="btn btn-sheets">
                             <i class="fas fa-sync"></i> Sync Google Sheets
                         </button>
+                        <button id="generateTestCustomer" class="btn btn-test">
+                            <i class="fas fa-user-plus"></i> Generate Test Customer
+                        </button>
                     </div>
                 </div>
                 
@@ -349,7 +352,28 @@
                 checkPassword();
             }
         });
+
+        // Function to match panel heights
+        function matchPanelHeights() {
+            const formSection = document.querySelector('.form-section');
+            const recordsSection = document.querySelector('.records-section');
+            
+            if (formSection && recordsSection) {
+                // Reset height to get natural height
+                recordsSection.style.height = 'auto';
+                
+                // Get the natural height of the form section
+                const formHeight = formSection.offsetHeight;
+                
+                // Set the records section to match
+                recordsSection.style.height = formHeight + 'px';
+            }
+        }
+
+        // Match heights when page loads and when window resizes
+        window.addEventListener('load', matchPanelHeights);
+        window.addEventListener('resize', matchPanelHeights);
     </script>
-    <script src="script.js"></script></script>
+    <script src="script.js"></script>
 </body>
 </html>

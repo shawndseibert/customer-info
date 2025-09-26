@@ -79,7 +79,11 @@ function doGet(e) {
       if (callback) {
         return ContentService
           .createTextOutput(`${callback}(${JSON.stringify(response)})`)
-          .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          .setMimeType(ContentService.MimeType.JAVASCRIPT)
+          .setHeaders({
+            'Content-Type': 'application/javascript',
+            'Access-Control-Allow-Origin': '*'
+          });
       }
       
       // Handle regular JSON requests
@@ -111,7 +115,11 @@ function doGet(e) {
     if (e.parameter.callback) {
       return ContentService
         .createTextOutput(`${e.parameter.callback}(${JSON.stringify(errorResponse)})`)
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+        .setMimeType(ContentService.MimeType.JAVASCRIPT)
+        .setHeaders({
+          'Content-Type': 'application/javascript',
+          'Access-Control-Allow-Origin': '*'
+        });
     }
     
     return ContentService

@@ -51,6 +51,11 @@ class CustomerManager {
             this.syncFromGoogleSheets();
         });
 
+        // Generate test customer
+        document.getElementById('generateTestCustomer').addEventListener('click', () => {
+            this.generateTestCustomer();
+        });
+
         // Modal events
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -976,18 +981,12 @@ class CustomerManager {
         } catch (error) {
             console.error('Google Sheets sync error:', error);
             
-            // Try alternative method
-            try {
-                this.showNotification('Trying alternative sync method...', 'info');
-                await this.syncViaManualCSVImport();
-            } catch (altError) {
-                console.error('Alternative sync method failed:', altError);
-                this.showNotification(
-                    'Google Sheets sync failed. You can manually export your sheet as CSV and import it below.',
-                    'warning'
-                );
-                this.showCSVImportOption();
-            }
+            // Show CSV import option immediately
+            this.showNotification(
+                'Automatic sync failed. You can manually import your Google Sheets data below.',
+                'info'
+            );
+            this.showCSVImportOption();
         }
     }
 
@@ -1023,6 +1022,208 @@ class CustomerManager {
             'emergency': 'emergency'
         };
         return urgencyMap[urgency] || 'medium';
+    }
+
+    // Test Data Generation
+    generateTestCustomer() {
+        const testCustomer = {
+            id: this.generateId(),
+            firstName: this.getRandomFirstName(),
+            lastName: this.getRandomLastName(),
+            phone: this.getRandomPhoneNumber(),
+            email: this.getRandomEmail(),
+            address: this.getRandomAddress(),
+            serviceType: this.getRandomServiceType(),
+            priority: this.getRandomPriority(),
+            status: this.getRandomStatus(),
+            productDetails: this.getRandomProductDetails(),
+            budget: this.getRandomBudget(),
+            preferredDate: this.getRandomPreferredDate(),
+            notes: this.getRandomNotes(),
+            referralSource: this.getRandomReferralSource(),
+            createdAt: this.getRandomCreatedDate(),
+            updatedAt: new Date().toISOString(),
+            meetingDate: this.getRandomMeetingDate(),
+            source: 'Test Data'
+        };
+
+        this.customers.push(testCustomer);
+        this.saveCustomers();
+        this.renderCustomers();
+        this.updateStats();
+        
+        this.showNotification(
+            `Test customer "${testCustomer.firstName} ${testCustomer.lastName}" generated successfully!`,
+            'success'
+        );
+    }
+
+    getRandomFirstName() {
+        const names = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Emily', 'James', 'Ashley', 'William', 'Jessica', 'Richard', 'Amanda', 'Thomas', 'Jennifer', 'Christopher', 'Melissa', 'Daniel', 'Michelle', 'Matthew', 'Kimberly', 'Anthony', 'Donna', 'Mark', 'Nancy', 'Donald', 'Carol', 'Steven', 'Sandra'];
+        return names[Math.floor(Math.random() * names.length)];
+    }
+
+    getRandomLastName() {
+        const names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson'];
+        return names[Math.floor(Math.random() * names.length)];
+    }
+
+    getRandomPhoneNumber() {
+        const areaCodes = ['615', '629', '931', '423', '865', '731', '901', '256', '205', '334'];
+        const areaCode = areaCodes[Math.floor(Math.random() * areaCodes.length)];
+        const exchange = Math.floor(Math.random() * 900) + 100;
+        const number = Math.floor(Math.random() * 9000) + 1000;
+        return `(${areaCode}) ${exchange}-${number}`;
+    }
+
+    getRandomEmail() {
+        const firstNames = ['john', 'jane', 'mike', 'sarah', 'david', 'lisa', 'bob', 'emily', 'tom', 'anna'];
+        const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com'];
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const domain = domains[Math.floor(Math.random() * domains.length)];
+        const number = Math.floor(Math.random() * 999) + 1;
+        return `${firstName}${number}@${domain}`;
+    }
+
+    getRandomAddress() {
+        const streets = ['Main St', 'Oak Ave', 'Pine Rd', 'Elm St', 'Maple Dr', 'Cedar Ln', 'Park Ave', 'First St', 'Second St', 'Church St', 'Mill Rd', 'Hill St', 'Valley Dr', 'Ridge Rd', 'River St'];
+        const cities = ['Nashville', 'Memphis', 'Knoxville', 'Chattanooga', 'Clarksville', 'Murfreesboro', 'Franklin', 'Jackson', 'Johnson City', 'Bartlett', 'Hendersonville', 'Kingsport', 'Collierville', 'Cleveland', 'Smyrna'];
+        
+        const houseNumber = Math.floor(Math.random() * 9999) + 1;
+        const street = streets[Math.floor(Math.random() * streets.length)];
+        const city = cities[Math.floor(Math.random() * cities.length)];
+        const zip = Math.floor(Math.random() * 90000) + 10000;
+        
+        return `${houseNumber} ${street}, ${city}, TN ${zip}`;
+    }
+
+    getRandomServiceType() {
+        const services = ['new-doors', 'new-windows', 'door-replacement', 'window-replacement', 'door-parts', 'window-parts', 'repair', 'consultation'];
+        return services[Math.floor(Math.random() * services.length)];
+    }
+
+    getRandomPriority() {
+        const priorities = ['low', 'medium', 'high', 'emergency'];
+        const weights = [30, 50, 15, 5]; // More medium/low priority customers
+        const random = Math.random() * 100;
+        let cumulative = 0;
+        
+        for (let i = 0; i < priorities.length; i++) {
+            cumulative += weights[i];
+            if (random <= cumulative) {
+                return priorities[i];
+            }
+        }
+        return 'medium';
+    }
+
+    getRandomStatus() {
+        const statuses = ['initial', 'quoted', 'scheduled', 'in-progress', 'completed', 'follow-up'];
+        const weights = [40, 25, 15, 10, 8, 2]; // More new leads
+        const random = Math.random() * 100;
+        let cumulative = 0;
+        
+        for (let i = 0; i < statuses.length; i++) {
+            cumulative += weights[i];
+            if (random <= cumulative) {
+                return statuses[i];
+            }
+        }
+        return 'initial';
+    }
+
+    getRandomProductDetails() {
+        const details = [
+            'Standard front door replacement',
+            'Bay window installation - living room',
+            'Sliding patio door repair',
+            'Kitchen window replacement (2 windows)',
+            'Entry door with sidelights',
+            'Basement window replacement',
+            'French doors to backyard',
+            'Storm door installation',
+            'Window trim repair',
+            'Custom wood door refinishing',
+            'Double-hung windows (4 total)',
+            'Garage door weather stripping',
+            'Master bedroom window upgrade',
+            'Bathroom window privacy glass',
+            'Screen door replacement'
+        ];
+        return details[Math.floor(Math.random() * details.length)];
+    }
+
+    getRandomBudget() {
+        const budgets = ['under-500', '500-1000', '1000-2500', '2500-5000', '5000-10000', 'over-10000'];
+        const weights = [10, 20, 30, 25, 10, 5];
+        const random = Math.random() * 100;
+        let cumulative = 0;
+        
+        for (let i = 0; i < budgets.length; i++) {
+            cumulative += weights[i];
+            if (random <= cumulative) {
+                return budgets[i];
+            }
+        }
+        return '1000-2500';
+    }
+
+    getRandomPreferredDate() {
+        if (Math.random() < 0.3) return ''; // 30% have no preferred date
+        
+        const today = new Date();
+        const futureDate = new Date(today.getTime() + (Math.random() * 90 * 24 * 60 * 60 * 1000)); // Random date within 90 days
+        return futureDate.toISOString().split('T')[0];
+    }
+
+    getRandomNotes() {
+        const notes = [
+            'Customer prefers morning appointments',
+            'Has a dog - please call before arriving',
+            'Interested in energy-efficient options',
+            'Previous work done by another company',
+            'Needs quote for insurance claim',
+            'Wants to match existing style',
+            'Budget is flexible for quality work',
+            'Referred by neighbor who was very satisfied',
+            'Looking for quick turnaround',
+            'Prefers local/family business',
+            'Wants environmentally friendly materials',
+            'Has specific brand preferences',
+            '',
+            '',
+            '' // Some customers have no notes
+        ];
+        return notes[Math.floor(Math.random() * notes.length)];
+    }
+
+    getRandomReferralSource() {
+        const sources = ['google', 'facebook', 'referral', 'yellowpages', 'flyer', 'repeat', 'other'];
+        const weights = [35, 20, 25, 5, 5, 8, 2];
+        const random = Math.random() * 100;
+        let cumulative = 0;
+        
+        for (let i = 0; i < sources.length; i++) {
+            cumulative += weights[i];
+            if (random <= cumulative) {
+                return sources[i];
+            }
+        }
+        return 'google';
+    }
+
+    getRandomCreatedDate() {
+        const today = new Date();
+        const pastDate = new Date(today.getTime() - (Math.random() * 30 * 24 * 60 * 60 * 1000)); // Random date within last 30 days
+        return pastDate.toISOString();
+    }
+
+    getRandomMeetingDate() {
+        if (Math.random() < 0.7) return ''; // 70% have no meeting scheduled
+        
+        const today = new Date();
+        const futureDate = new Date(today.getTime() + (Math.random() * 14 * 24 * 60 * 60 * 1000)); // Random date within 14 days
+        return futureDate.toISOString();
     }
 
     // JSONP method to bypass CORS
@@ -1118,8 +1319,9 @@ class CustomerManager {
 
     // Fallback CSV import method
     async syncViaManualCSVImport() {
-        // This is a placeholder - in reality we'd need manual CSV upload
-        throw new Error('Manual CSV import not implemented yet');
+        // Show the CSV import option directly
+        this.showCSVImportOption();
+        return Promise.resolve(); // Don't throw error, just show the option
     }
 
     showCSVImportOption() {

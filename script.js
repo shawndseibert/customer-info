@@ -41,6 +41,11 @@ class CustomerManager {
             this.exportData();
         });
 
+        // Import QR code submissions
+        document.getElementById('importSubmissions').addEventListener('click', () => {
+            this.importCustomerSubmissions();
+        });
+
         // Modal events
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -574,6 +579,145 @@ class CustomerManager {
         window.URL.revokeObjectURL(url);
         
         this.showNotification('Data exported successfully!', 'success');
+    }
+
+    // Import Customer Submissions from QR Code Form
+    importCustomerSubmissions() {
+        const submissions = JSON.parse(localStorage.getItem('customerSubmissions') || '[]');
+        
+        if (submissions.length === 0) {
+            this.showNotification('No QR code submissions found to import', 'info');
+            return;
+        }
+
+        let importedCount = 0;
+        let skippedCount = 0;
+
+        submissions.forEach(submission => {
+            // Check if this submission already exists (by phone number and timestamp)
+            const existingCustomer = this.customers.find(c => 
+                c.phone === submission.phone && 
+                Math.abs(new Date(c.createdAt) - new Date(submission.timestamp)) < 60000 // Within 1 minute
+            );
+
+            if (!existingCustomer) {
+                // Convert submission format to customer format
+                const customerData = this.convertSubmissionToCustomer(submission);
+                this.customers.push(customerData);
+                importedCount++;
+            } else {
+                skippedCount++;
+            }
+        });
+
+        if (importedCount > 0) {
+            this.saveCustomers();
+            this.renderCustomers();
+            this.updateStats();
+            
+            // Clear imported submissions to avoid re-importing
+            localStorage.removeItem('customerSubmissions');
+            
+            this.showNotification(
+                `Successfully imported ${importedCount} new leads from QR code submissions!` + 
+                (skippedCount > 0 ? ` (${skippedCount} duplicates skipped)` : ''), 
+                'success'
+            );
+        } else {
+            this.showNotification(
+                skippedCount > 0 ? 'All submissions were already imported' : 'No new submissions to import', 
+                'info'
+            );
+        }
+    }
+
+    convertSubmissionToCustomer(submission) {
+        // Map customer form fields to admin system fields
+        const urgencyToPriority = {
+            'flexible': 'low',
+            'month': 'low',
+            'weeks': 'medium',
+            'urgent': 'high',
+            'emergency': 'emergency'
+        };
+
+        return {
+            id: submission.id || this.generateId(),
+            firstName: submission.firstName || '',
+            lastName: submission.lastName || '',
+            phone: submission.phone || '',
+            email: submission.email || '',
+            address: submission.address || '',
+            serviceType: submission.serviceType || '',
+            priority: urgencyToPriority[submission.urgency] || 'medium',
+            status: 'initial',
+            productDetails: submission.description || '',
+            budget: submission.budget || '',
+            preferredDate: submission.preferredDate || '',
+            notes: this.buildNotesFromSubmission(submission),
+            referralSource: submission.heardAbout || '',
+            createdAt: submission.timestamp || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            meetingDate: '', // Will be scheduled later
+            // Add QR code source indicator
+            source: 'QR Code Form'
+        };
+    }
+
+    buildNotesFromSubmission(submission) {
+        let notes = [];
+        
+        if (submission.urgency) {
+            notes.push(`Urgency: ${this.getUrgencyLabel(submission.urgency)}`);
+        }
+        
+        if (submission.contactPreference && submission.contactPreference !== 'any') {
+            notes.push(`Prefers contact by: ${this.getContactPreferenceLabel(submission.contactPreference)}`);
+        }
+        
+        if (submission.contactTime && submission.contactTime !== 'anytime') {
+            notes.push(`Best contact time: ${this.getContactTimeLabel(submission.contactTime)}`);
+        }
+        
+        if (submission.additionalNotes) {
+            notes.push(`Additional notes: ${submission.additionalNotes}`);
+        }
+        
+        notes.push('Source: QR Code Submission');
+        
+        return notes.join(' | ');
+    }
+
+    getUrgencyLabel(value) {
+        const labels = {
+            'flexible': 'Flexible with timing',
+            'month': 'Within the next month',
+            'weeks': 'Within 2-3 weeks',
+            'urgent': 'As soon as possible',
+            'emergency': 'Emergency'
+        };
+        return labels[value] || value || '';
+    }
+
+    getContactPreferenceLabel(value) {
+        const labels = {
+            'phone': 'Phone Call',
+            'text': 'Text Message',
+            'email': 'Email',
+            'any': 'Any method is fine'
+        };
+        return labels[value] || value || '';
+    }
+
+    getContactTimeLabel(value) {
+        const labels = {
+            'anytime': 'Anytime',
+            'morning': 'Morning (8am-12pm)',
+            'afternoon': 'Afternoon (12pm-5pm)',
+            'evening': 'Evening (5pm-8pm)',
+            'weekends': 'Weekends only'
+        };
+        return labels[value] || value || '';
     }
 
     convertToCSV(data) {

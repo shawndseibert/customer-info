@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Service Quote - Door & Window Professionals</title>
+    <link rel="stylesheet" href="customer-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="customer-header">
+            <div class="logo-section">
+                <i class="fas fa-door-open"></i>
+                <h1>Door & Window Professionals</h1>
+            </div>
+            <p class="tagline">Quality installations, repairs, and replacements</p>
+        </header>
+
+        <div class="intro-section">
+            <h2>Get Your Free Quote Today!</h2>
+            <p>Fill out the form below and we'll contact you within 24 hours with a personalized quote for your door and window needs.</p>
+            <div class="trust-indicators">
+                <div class="trust-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Licensed & Insured</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-clock"></i>
+                    <span>24hr Response</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-star"></i>
+                    <span>5-Star Service</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <form id="customerQuoteForm" class="quote-form">
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> Your Information</h3>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" name="firstName" required placeholder="John">
+                        </div>
+                        <div class="form-field">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" name="lastName" required placeholder="Smith">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567">
+                        </div>
+                        <div class="form-field">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="john@example.com">
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="address">Property Address *</label>
+                        <textarea id="address" name="address" rows="2" required placeholder="123 Main Street, City, State, ZIP"></textarea>
+                        <small>This helps us provide accurate estimates and scheduling</small>
+                    </div>
+                </div>
+
+                <!-- Service Details -->
+                <div class="form-section">
+                    <h3><i class="fas fa-tools"></i> What Do You Need?</h3>
+                    
+                    <div class="form-field">
+                        <label for="serviceType">Type of Service *</label>
+                        <select id="serviceType" name="serviceType" required>
+                            <option value="">Choose what you need...</option>
+                            <option value="new-doors">New Door Installation</option>
+                            <option value="new-windows">New Window Installation</option>
+                            <option value="door-replacement">Replace Existing Door</option>
+                            <option value="window-replacement">Replace Existing Windows</option>
+                            <option value="door-parts">Door Hardware/Parts</option>
+                            <option value="window-parts">Window Hardware/Parts</option>
+                            <option value="repair">Repair Existing Door/Window</option>
+                            <option value="consultation">Free Consultation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="urgency">How Soon Do You Need This?</label>
+                        <select id="urgency" name="urgency">
+                            <option value="flexible">I'm flexible with timing</option>
+                            <option value="month">Within the next month</option>
+                            <option value="weeks">Within 2-3 weeks</option>
+                            <option value="urgent">As soon as possible</option>
+                            <option value="emergency">Emergency (broken/security issue)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="description">Tell Us About Your Project</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Describe what you need... For example: 'Replace front door with steel door, looking for energy efficient option' or 'Three bedroom windows need replacement, prefer vinyl'"></textarea>
+                        <small>Include materials, colors, sizes, or any special requirements</small>
+                    </div>
+                </div>
+
+                <!-- Budget and Preferences -->
+                <div class="form-section">
+                    <h3><i class="fas fa-calculator"></i> Budget & Preferences</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="budget">Estimated Budget Range</label>
+                            <select id="budget" name="budget">
+                                <option value="">Select budget range (optional)</option>
+                                <option value="under-500">Under $500</option>
+                                <option value="500-1000">$500 - $1,000</option>
+                                <option value="1000-2500">$1,000 - $2,500</option>
+                                <option value="2500-5000">$2,500 - $5,000</option>
+                                <option value="5000-10000">$5,000 - $10,000</option>
+                                <option value="over-10000">Over $10,000</option>
+                                <option value="unsure">Not sure yet</option>
+                            </select>
+                            <small>This helps us provide appropriate options</small>
+                        </div>
+                        <div class="form-field">
+                            <label for="preferredDate">Preferred Start Date</label>
+                            <input type="date" id="preferredDate" name="preferredDate">
+                            <small>We'll work with your schedule</small>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="contactPreference">Best Way to Contact You</label>
+                        <select id="contactPreference" name="contactPreference">
+                            <option value="phone">Phone Call</option>
+                            <option value="text">Text Message</option>
+                            <option value="email">Email</option>
+                            <option value="any">Any method is fine</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="contactTime">Best Time to Contact</label>
+                        <select id="contactTime" name="contactTime">
+                            <option value="anytime">Anytime</option>
+                            <option value="morning">Morning (8am-12pm)</option>
+                            <option value="afternoon">Afternoon (12pm-5pm)</option>
+                            <option value="evening">Evening (5pm-8pm)</option>
+                            <option value="weekends">Weekends only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="form-section">
+                    <h3><i class="fas fa-comment"></i> Additional Information</h3>
+                    
+                    <div class="form-field">
+                        <label for="heardAbout">How did you hear about us?</label>
+                        <select id="heardAbout" name="heardAbout">
+                            <option value="">Please select...</option>
+                            <option value="google">Google Search</option>
+                            <option value="referral">Friend/Family Referral</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="nextdoor">Nextdoor</option>
+                            <option value="flyer">Flyer/Advertisement</option>
+                            <option value="drive-by">Saw your work in neighborhood</option>
+                            <option value="yellowpages">Yellow Pages</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="additionalNotes">Anything Else We Should Know?</label>
+                        <textarea id="additionalNotes" name="additionalNotes" rows="3" placeholder="Special access requirements, pet considerations, specific brands you prefer, etc."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <div class="privacy-notice">
+                        <i class="fas fa-lock"></i>
+                        <small>Your information is secure and will only be used to provide your quote. We never share or sell customer data.</small>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        Get My Free Quote
+                    </button>
+                    
+                    <div class="response-promise">
+                        <i class="fas fa-clock"></i>
+                        <span>We'll respond within 24 hours!</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" style="display: none;">
+            <div class="success-content">
+                <i class="fas fa-check-circle"></i>
+                <h3>Thank You!</h3>
+                <p>Your quote request has been submitted successfully. We'll contact you within 24 hours to discuss your project and schedule a free consultation.</p>
+                <div class="next-steps">
+                    <h4>What happens next?</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> We'll call/text you to confirm details</li>
+                        <li><i class="fas fa-calendar"></i> Schedule a convenient time for consultation</li>
+                        <li><i class="fas fa-clipboard-list"></i> Provide a detailed written estimate</li>
+                    </ul>
+                </div>
+                <button onclick="submitAnother()" class="secondary-btn">Submit Another Request</button>
+            </div>
+        </div>
+
+        <footer class="customer-footer">
+            <div class="footer-content">
+                <div class="contact-info">
+                    <h4>Contact Us Directly</h4>
+                    <p><i class="fas fa-phone"></i> Call: (555) 123-DOOR</p>
+                    <p><i class="fas fa-envelope"></i> Email: info@doorwindowpro.com</p>
+                </div>
+                <div class="service-areas">
+                    <h4>Service Areas</h4>
+                    <p>Serving [Your City] and surrounding areas</p>
+                    <p>Licensed & Insured • Free Estimates</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="customer-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Door & Window Services - Choose Your Access</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            margin: 20px;
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #4a5568;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .option-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-decoration: none;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+        .option-card i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .option-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        .option-card p {
+            color: #718096;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .quick-access {
+            background: #e6fffa;
+            border: 2px solid #38a169;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .quick-access h4 {
+            color: #2f855a;
+            margin-bottom: 10px;
+        }
+        .quick-access p {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            .options {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-door-open"></i> Door & Window Services</h1>
+        <p class="subtitle">Choose how you'd like to access our system</p>
+        
+        <div class="options">
+            <a href="customer.html" class="option-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h3>Customer Portal</h3>
+                <p>Quick quote request form for customers. Perfect for QR code access and mobile devices.</p>
+            </a>
+            
+            <a href="admin.html" class="option-card">
+                <i class="fas fa-cogs"></i>
+                <h3>Business Management</h3>
+                <p>Full customer management system with records, search, export, and business analytics.</p>
+            </a>
+        </div>
+        
+        <div class="quick-access">
+            <h4><i class="fas fa-qrcode"></i> QR Code Setup</h4>
+            <p>For QR codes, use the <strong>Customer Portal</strong> link. The Business Management system is for your internal use only.</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect based on URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const view = urlParams.get('view');
+        
+        if (view === 'customer') {
+            window.location.href = 'customer.html';
+        } else if (view === 'admin') {
+            window.location.href = 'admin.html';
+        }
+        
+        // Add click tracking for analytics
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const destination = e.currentTarget.href.includes('customer') ? 'customer' : 'admin';
+                console.log(`User selected: ${destination} portal`);
+            });
+        });
+    </script>
+</body>
+</html>

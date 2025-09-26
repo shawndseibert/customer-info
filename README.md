@@ -1,7 +1,23 @@
 # Customer Information Manager
 **Professional Door & Window Services Customer Management System**
 
-A modern, responsive web application designed specifically for door and window service professionals to efficiently capture, organize, and manage customer information.
+A complete dual-interface system designed specifically for door and window service professionals: a simplified customer-facing form for quotes and leads, plus a comprehensive business management system for organizing and tracking all customer information.
+
+## 🎯 Two-System Approach
+
+### 1. Customer Portal (`customer.html`)
+- **Simplified quote request form** optimized for mobile devices
+- **QR code friendly** - perfect for business cards, flyers, and vehicle signage
+- **Professional appearance** that builds trust with potential customers
+- **Auto-saves progress** so customers never lose their information
+- **24-hour response promise** to set clear expectations
+
+### 2. Business Admin System (`admin.html`)
+- **Complete customer management** with full CRUD operations
+- **Import QR code leads** automatically from customer submissions
+- **Advanced search and filtering** to quickly find any customer
+- **Export capabilities** for backup and external analysis
+- **Business analytics dashboard** to track performance
 
 ## 🌟 Features
 
@@ -44,38 +60,70 @@ A modern, responsive web application designed specifically for door and window s
 4. Select "Deploy from a branch" as source
 5. Choose "main" branch and "/ (root)" folder
 6. Click "Save"
-7. Your site will be available at `https://yourusername.github.io/customer-info`
+7. Your site will be available at:
+   - **Main Site:** `https://yourusername.github.io/customer-info/` (smart routing)
+   - **Customer Form:** `https://yourusername.github.io/customer-info/customer.html`
+   - **Business Admin:** `https://yourusername.github.io/customer-info/admin.html`
 
 ### Option 2: Local Development
 1. Download or clone this repository
-2. Open `index.html` in any modern web browser
+2. Open any HTML file in a modern web browser
 3. Start managing your customers immediately!
+
+## 🎯 System URLs
+
+### For QR Codes & Customer Access
+Use: `https://yourusername.github.io/customer-info/customer.html`
+
+### For Your Business Management
+Use: `https://yourusername.github.io/customer-info/admin.html`
+
+### Smart Auto-Routing
+Use: `https://yourusername.github.io/customer-info/` (automatically detects best view)
 
 ## 📱 How to Use
 
-### Adding New Customers
+### Customer Portal (customer.html)
+**For your customers to request quotes:**
+1. Customer fills out simplified form (2-3 minutes)
+2. Form auto-saves progress to prevent data loss
+3. Professional "thank you" page with next steps
+4. You receive notification of new lead
+
+### Business Admin System (admin.html)
+**For managing your business:**
+
+#### Adding Customers Manually
 1. Fill out the comprehensive form on the left side
 2. Required fields are marked with an asterisk (*)
 3. Select appropriate service type and priority level
 4. Add detailed notes about customer requirements
 5. Click "Save Customer Information"
 
-### Managing Existing Customers
+#### Importing QR Code Leads
+1. Click "Import QR Leads" button
+2. System automatically imports customer submissions
+3. Converts customer format to your business format
+4. Avoids duplicates and marks source as QR code
+
+#### Managing Existing Customers
 - **Search**: Use the search box to find customers by any field
 - **Filter**: Use the status dropdown to filter by project status
 - **View Details**: Click any customer card to see full information
 - **Edit**: Click "Edit" in the customer detail modal
 - **Delete**: Click "Delete" in the customer detail modal (with confirmation)
 
-### Data Export
+#### Data Export
 - Click the "Export" button to download all customer data as CSV
 - Perfect for backup or importing into other systems
 - File includes all customer information with timestamps
 
-### Mobile Usage
-- The interface automatically adapts to smaller screens
-- All features remain fully functional on mobile devices
-- Perfect for use during client visits
+### QR Code Workflow
+1. **Generate QR Code** pointing to your customer.html URL
+2. **Add to marketing materials** (business cards, flyers, vehicle signs)
+3. **Customer scans & submits** quote request
+4. **You import leads** into your admin system
+5. **Follow up** with customers within 24 hours
 
 ## 🛠️ Technical Details
 

@@ -181,6 +181,16 @@ header p {
     transform: translateY(-1px);
 }
 
+.btn-import {
+    background: #3182ce;
+    color: white;
+}
+
+.btn-import:hover {
+    background: #2c5282;
+    transform: translateY(-1px);
+}
+
 .form-actions {
     display: flex;
     gap: 15px;

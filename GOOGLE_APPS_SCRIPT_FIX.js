@@ -109,7 +109,14 @@ function doGet(e) {
                 notes: row[12] || '',       // Column M: Notes
                 dateAdded: row[13] || '',   // Column N: Date Added
                 budget: row[14] || '',      // Column O: Budget
-                preferredDate: row[15] || '' // Column P: Preferred Date
+                preferredDate: row[15] || '', // Column P: Preferred Date
+                // Additional fields for form compatibility
+                productDetails: row[12] || '', // Use notes as product details if available
+                meetingDate: '',            // Default empty
+                referralSource: '',         // Default empty
+                createdAt: row[13] || new Date().toISOString(), // Use dateAdded as createdAt
+                updatedAt: new Date().toISOString(),
+                source: 'Google Sheets'
               };
             } catch (error) {
               console.error('Error processing row', index + 2, ':', error, 'Row data:', row);

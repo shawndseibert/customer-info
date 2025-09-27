@@ -1560,20 +1560,32 @@ class CustomerManager {
             lastName: sheetRow.lastName || '', 
             phone: sheetRow.phone || '',
             email: sheetRow.email || '',
-            address: sheetRow.address || '',
+            address: this.combineAddress(sheetRow),
             serviceType: sheetRow.serviceType || '',
             priority: priority,
             status: this.mapStatusToSystemStatus(sheetRow.status),
             productDetails: sheetRow.description || sheetRow.notes || '',
             budget: sheetRow.budget || '', 
             preferredDate: sheetRow.preferredDate || '',
-            notes: sheetRow.additionalNotes || '',
-            referralSource: sheetRow.heardAbout || '',
-            createdAt: sheetRow.timestamp || new Date().toISOString(),
+            meetingDate: sheetRow.meetingDate || '',
+            notes: sheetRow.notes || sheetRow.additionalNotes || '',
+            referralSource: sheetRow.heardAbout || sheetRow.referralSource || '',
+            createdAt: sheetRow.timestamp || sheetRow.dateAdded || new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            meetingDate: '',
-            source: 'Customer Form'
+            source: 'Google Sheets Import'
         };
+    }
+
+    combineAddress(sheetRow) {
+        // Combine address components from Google Sheets into a single address string
+        let addressParts = [];
+        
+        if (sheetRow.address) addressParts.push(sheetRow.address);
+        if (sheetRow.city) addressParts.push(sheetRow.city);
+        if (sheetRow.state) addressParts.push(sheetRow.state);
+        if (sheetRow.zip) addressParts.push(sheetRow.zip);
+        
+        return addressParts.join(', ') || '';
     }
 
     mapStatusToSystemStatus(status) {

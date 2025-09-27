@@ -446,10 +446,14 @@ function normalizePriority(priority) {
   return textMap[priorityLower] || 'medium';
 }
 
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 function handleAddCustomer(data) {
   try {
     const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
-    const customerId = data.id || Date.now().toString();
+    const customerId = data.id || generateId();
     
     console.log('Adding customer with data:', data);
     

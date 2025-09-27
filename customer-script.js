@@ -498,17 +498,17 @@ class CustomerQuoteForm {
         // Parse address into components
         const addressParts = this.parseAddress(formData.address || '');
         
-        // Convert urgency to priority (1-5 scale)
+        // Convert urgency to priority (text format to match admin system)
         const urgencyToPriority = {
-            'emergency': 5,
-            'urgent': 4,
-            'weeks': 3,
-            'month': 2,
-            'flexible': 1
+            'emergency': 'emergency',
+            'urgent': 'high',
+            'weeks': 'medium',
+            'month': 'medium',
+            'flexible': 'low'
         };
 
         return {
-            id: Date.now().toString(),
+            id: this.generateId(),
             firstName: formData.firstName || '',
             lastName: formData.lastName || '',
             phone: formData.phone || '',
@@ -518,8 +518,8 @@ class CustomerQuoteForm {
             state: addressParts.state,
             zip: addressParts.zip,
             serviceType: getServiceTypeLabel(formData.serviceType),
-            status: 'New Lead',
-            priority: urgencyToPriority[formData.urgency] || 1,
+            status: 'initial',
+            priority: urgencyToPriority[formData.urgency] || 'medium',
             notes: this.buildNotesFromForm(formData),
             dateAdded: new Date(formData.timestamp).toLocaleDateString(),
             budget: getBudgetLabel(formData.budget),

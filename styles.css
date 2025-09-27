@@ -407,6 +407,16 @@ header p {
     transform: translateY(-1px);
 }
 
+.btn-warning {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #f57c00;
+    transform: translateY(-1px);
+}
+
 .btn-test {
     background: linear-gradient(45deg, #f59e0b, #d97706);
     border: none;
@@ -1367,11 +1377,20 @@ body.dark-theme .btn-test {
     border-color: #4a5568;
 }
 
+body.dark-theme .btn-warning {
+    background: #ed8936;
+    color: #1a202c;
+}
+
 body.dark-theme .btn-export:hover,
 body.dark-theme .btn-import:hover,
 body.dark-theme .btn-sheets:hover,
 body.dark-theme .btn-sheets-push:hover {
     background: #374151;
+}
+
+body.dark-theme .btn-warning:hover {
+    background: #dd6b20;
 }
 
 /* Dark theme - Customer records */

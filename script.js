@@ -71,6 +71,13 @@ class CustomerManager {
             this.pushAllToGoogleSheets();
         });
 
+        // Deduplicate customers
+        safeAddEventListener('deduplicateCustomers', 'click', () => {
+            if (confirm('This will merge duplicate customers based on phone numbers. This action cannot be undone. Continue?')) {
+                this.deduplicateCustomers();
+            }
+        });
+
         // Generate test customer
         const testCustomerIcon = document.getElementById('generateTestCustomer');
         if (testCustomerIcon) {
@@ -909,6 +916,85 @@ class CustomerManager {
         priorityElement('priorityHigh', priorityCounts.high);
         priorityElement('priorityMedium', priorityCounts.medium);
         priorityElement('priorityLow', priorityCounts.low);
+    }
+
+    // Deduplication utility
+    deduplicateCustomers() {
+        console.log('Starting deduplication process...');
+        const originalCount = this.customers.length;
+        const phoneMap = new Map();
+        const duplicatesFound = [];
+        
+        // Group customers by phone number
+        this.customers.forEach((customer, index) => {
+            const phone = customer.phone?.replace(/\D/g, ''); // Remove non-digits for comparison
+            if (phone && phoneMap.has(phone)) {
+                const existing = phoneMap.get(phone);
+                duplicatesFound.push({
+                    original: existing,
+                    duplicate: { customer, index }
+                });
+            } else if (phone) {
+                phoneMap.set(phone, { customer, index });
+            }
+        });
+        
+        if (duplicatesFound.length === 0) {
+            this.showNotification('No duplicates found!', 'success');
+            return;
+        }
+        
+        // Merge duplicates (keep the most recent or most complete data)
+        const indicesToRemove = [];
+        let mergedCount = 0;
+        
+        duplicatesFound.forEach(({ original, duplicate }) => {
+            const originalCustomer = original.customer;
+            const duplicateCustomer = duplicate.customer;
+            
+            // Determine which has more recent data
+            const originalDate = new Date(originalCustomer.updatedAt || originalCustomer.createdAt || 0);
+            const duplicateDate = new Date(duplicateCustomer.updatedAt || duplicateCustomer.createdAt || 0);
+            
+            if (duplicateDate > originalDate) {
+                // Replace original with duplicate data but keep the better ID format
+                const bestId = this.chooseBestId(originalCustomer.id, duplicateCustomer.id);
+                this.customers[original.index] = { ...duplicateCustomer, id: bestId };
+                indicesToRemove.push(duplicate.index);
+            } else {
+                // Keep original, just remove duplicate
+                indicesToRemove.push(duplicate.index);
+            }
+            mergedCount++;
+        });
+        
+        // Remove duplicates (sort indices in reverse order to avoid index shifting)
+        indicesToRemove.sort((a, b) => b - a).forEach(index => {
+            this.customers.splice(index, 1);
+        });
+        
+        this.saveCustomers();
+        this.renderCustomers();
+        this.updateStats();
+        
+        this.showNotification(
+            `Deduplication complete! Removed ${indicesToRemove.length} duplicates from ${originalCount} customers.`,
+            'success'
+        );
+        
+        console.log(`Deduplication results: ${originalCount} → ${this.customers.length} customers`);
+    }
+    
+    chooseBestId(id1, id2) {
+        // Prefer alphanumeric IDs over pure numeric IDs
+        const isNumeric1 = /^\d+$/.test(id1);
+        const isNumeric2 = /^\d+$/.test(id2);
+        
+        if (isNumeric1 && !isNumeric2) return id2; // Prefer alphanumeric
+        if (!isNumeric1 && isNumeric2) return id1; // Prefer alphanumeric
+        
+        // If both are same type, prefer the shorter one (more recent alphanumeric IDs are typically shorter)
+        return id1.length <= id2.length ? id1 : id2;
     }
 
     // Data Export

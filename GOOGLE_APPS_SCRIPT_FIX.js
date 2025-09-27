@@ -3,6 +3,55 @@
  * This should be in your Google Apps Script project
  */
 
+function doPost(e) {
+  console.log('POST request received:', e);
+  
+  try {
+    // Handle POST data
+    let postData = {};
+    
+    if (e.postData && e.postData.contents) {
+      try {
+        postData = JSON.parse(e.postData.contents);
+        console.log('Parsed JSON POST data:', postData);
+      } catch (jsonError) {
+        console.log('Not JSON, checking form data...');
+        // Handle form-encoded data
+        if (e.parameter) {
+          postData = e.parameter;
+          console.log('Using form parameter data:', postData);
+        }
+      }
+    } else if (e.parameter) {
+      postData = e.parameter;
+      console.log('Using parameter data:', postData);
+    }
+    
+    const action = postData.action || 'addCustomer';
+    console.log('Action:', action);
+    
+    if (action === 'addCustomer') {
+      return handleAddCustomer(postData);
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Unknown POST action: ' + action
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    console.error('POST error:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'POST processing error: ' + error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doGet(e) {
   try {
     const action = e.parameter.action || 'getData';
@@ -204,6 +253,73 @@ function doGet(e) {
     
     return ContentService
       .createTextOutput(JSON.stringify(errorResult))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleAddCustomer(data) {
+  try {
+    const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
+    const customerId = data.id || Date.now().toString();
+    
+    console.log('Adding customer with data:', data);
+    
+    // Check for existing customer by ID
+    const existingData = sheet.getDataRange().getValues();
+    const existingCustomer = existingData.find(row => row[0] === customerId);
+    
+    if (existingCustomer) {
+      console.log('Customer already exists:', customerId);
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          status: 'duplicate',
+          message: 'Customer already exists in Google Sheets',
+          customerId: customerId,
+          timestamp: new Date().toISOString()
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Prepare customer data with correct column mapping
+    const customerData = [
+      customerId,                                          // Column A: ID
+      data.firstName || '',                                // Column B: First  
+      data.lastName || '',                                 // Column C: Last
+      data.phone || '',                                    // Column D: Phone
+      data.email || '',                                    // Column E: Email
+      data.address || '',                                  // Column F: Address
+      data.city || '',                                     // Column G: City
+      data.state || '',                                    // Column H: State
+      data.zip || '',                                      // Column I: Zip
+      data.serviceType || data.service || '',              // Column J: Service
+      data.status || 'New Lead',                           // Column K: Status
+      data.priority || '',                                 // Column L: Priority
+      data.notes || '',                                    // Column M: Notes
+      data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
+      data.budget || '',                                   // Column O: Budget
+      data.preferredDate || ''                             // Column P: Preferred Date
+    ];
+    
+    console.log('Appending row with data:', customerData);
+    sheet.appendRow(customerData);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'success',
+        message: 'Customer added to Google Sheets',
+        customerId: customerId,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    console.error('Error adding customer:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Failed to add customer: ' + error.toString(),
+        timestamp: new Date().toISOString()
+      }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }

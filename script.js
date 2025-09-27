@@ -1360,7 +1360,7 @@ class CustomerManager {
                 preferredDate: customerData.preferredDate || ''
             });
             
-            script.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?${params.toString()}`;
+            script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;
             
             script.onerror = () => {
                 console.error('Failed to load Google Apps Script for adding customer');
@@ -1691,7 +1691,7 @@ class CustomerManager {
             
             // Create script tag for JSONP
             const script = document.createElement('script');
-            script.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=getData&callback=${callbackName}`;
+            script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?action=getData&callback=${callbackName}`;
             
             // Set up callback function
             window[callbackName] = (data) => {
@@ -1752,7 +1752,7 @@ class CustomerManager {
             // Create hidden iframe
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = `https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=getData&format=html`;
+            iframe.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?action=getData&format=html`;
             
             let timeoutId;
             
@@ -1802,7 +1802,7 @@ class CustomerManager {
 
     // Test Google Apps Script URL accessibility
     async testGoogleSheetsURL() {
-        const testUrl = 'https://script.google.com/macros/s/AKfycbxOYCRsqxaCFDtQSvywiY29sl3sbB8WEa6lDUGeAgoJka7Mn4GqPsqo0gLID1FifDF1zA/exec?action=test';
+        const testUrl = 'https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?action=test';
         
         try {
             console.log('Testing Google Apps Script URL:', testUrl);

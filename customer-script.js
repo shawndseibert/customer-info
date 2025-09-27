@@ -483,43 +483,146 @@ class CustomerQuoteForm {
     }
 
     async sendToGoogleSheets(formData) {
-        // Send customer data directly to Google Sheets using form submission method (CORS-free)
+        // Convert customer form data to match admin system format
+        const customerData = this.convertToAdminFormat(formData);
         
-        const sheetData = {
-            timestamp: new Date(formData.timestamp).toLocaleString(),
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            phone: formData.phone,
-            email: formData.email || '',
-            address: formData.address,
-            serviceType: getServiceTypeLabel(formData.serviceType),
-            urgency: getUrgencyLabel(formData.urgency),
-            description: formData.description || '',
-            budget: getBudgetLabel(formData.budget),
-            preferredDate: formData.preferredDate || '',
-            contactPreference: getContactPreferenceLabel(formData.contactPreference),
-            contactTime: getContactTimeLabel(formData.contactTime),
-            heardAbout: getHeardAboutLabel(formData.heardAbout),
-            additionalNotes: formData.additionalNotes || '',
-            status: 'New Lead',
-            source: 'QR Code Form'
+        console.log('🔍 DEBUG: Original form data:', formData);
+        console.log('🔍 DEBUG: Converted customer data:', customerData);
+        
+        // Use direct form submission method (most reliable for Google Apps Script)
+        return this.sendToGoogleSheetsDirectForm(formData);
+    }
+
+    // Convert customer form data to admin system format
+    convertToAdminFormat(formData) {
+        // Parse address into components
+        const addressParts = this.parseAddress(formData.address || '');
+        
+        // Convert urgency to priority (1-5 scale)
+        const urgencyToPriority = {
+            'emergency': 5,
+            'urgent': 4,
+            'weeks': 3,
+            'month': 2,
+            'flexible': 1
         };
 
+        return {
+            id: Date.now().toString(),
+            firstName: formData.firstName || '',
+            lastName: formData.lastName || '',
+            phone: formData.phone || '',
+            email: formData.email || '',
+            address: addressParts.street,
+            city: addressParts.city,
+            state: addressParts.state,
+            zip: addressParts.zip,
+            serviceType: getServiceTypeLabel(formData.serviceType),
+            status: 'New Lead',
+            priority: urgencyToPriority[formData.urgency] || 1,
+            notes: this.buildNotesFromForm(formData),
+            dateAdded: new Date(formData.timestamp).toLocaleDateString(),
+            budget: getBudgetLabel(formData.budget),
+            preferredDate: formData.preferredDate || ''
+        };
+    }
+
+    // Parse address string into components
+    parseAddress(addressString) {
+        if (!addressString) return { street: '', city: '', state: '', zip: '' };
+        
+        const parts = addressString.split(',').map(part => part.trim());
+        
+        if (parts.length >= 3) {
+            const street = parts[0];
+            const city = parts[1];
+            const stateZipPart = parts[2];
+            
+            // Extract state and zip from "State ZIP" format
+            const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+            if (stateZipMatch) {
+                return {
+                    street: street,
+                    city: city,
+                    state: stateZipMatch[1],
+                    zip: stateZipMatch[2]
+                };
+            }
+        }
+        
+        // Fallback: return as single street address
+        return {
+            street: addressString,
+            city: '',
+            state: '',
+            zip: ''
+        };
+    }
+
+    // Build comprehensive notes from form data
+    buildNotesFromForm(formData) {
+        const notes = [];
+        
+        if (formData.description) {
+            notes.push(`Description: ${formData.description}`);
+        }
+        
+        if (formData.urgency) {
+            notes.push(`Urgency: ${getUrgencyLabel(formData.urgency)}`);
+        }
+        
+        if (formData.contactPreference) {
+            notes.push(`Contact Preference: ${getContactPreferenceLabel(formData.contactPreference)}`);
+        }
+        
+        if (formData.contactTime) {
+            notes.push(`Best Contact Time: ${getContactTimeLabel(formData.contactTime)}`);
+        }
+        
+        if (formData.heardAbout) {
+            notes.push(`How they heard about us: ${getHeardAboutLabel(formData.heardAbout)}`);
+        }
+        
+        if (formData.additionalNotes) {
+            notes.push(`Additional Notes: ${formData.additionalNotes}`);
+        }
+        
+        notes.push(`Source: QR Code Form`);
+        notes.push(`Submitted: ${new Date(formData.timestamp).toLocaleString()}`);
+        
+        return notes.join('\n');
+    }
+
+    // Fallback method using direct form submission with corrected mapping
+    async sendToGoogleSheetsDirectForm(formData) {
+        const customerData = this.convertToAdminFormat(formData);
+        
+        console.log('🔄 DEBUG: Using direct form submission fallback');
+        console.log('🔍 DEBUG: CustomerData for form submission:', customerData);
+        
         try {
-            // Use form submission method to avoid CORS issues
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'https://script.google.com/macros/s/AKfycbzrNx36wtkvVehXOHR-c7_Nzb4dAIUhDXItCCCLGO7TqfqISL00Hvc1naze7AxkYucd0A/exec';
-            form.target = '_blank';
+            form.action = 'https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec';
             form.style.display = 'none';
 
-            // Add all data as hidden form fields
-            Object.keys(sheetData).forEach(key => {
+            console.log('🔍 DEBUG: Form action URL:', form.action);
+
+            // Add action parameter
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'addCustomer';
+            form.appendChild(actionInput);
+
+            // Add all customer data as hidden form fields with correct names
+            Object.keys(customerData).forEach(key => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = key;
-                input.value = sheetData[key];
+                input.value = customerData[key];
                 form.appendChild(input);
+                console.log(`🔍 DEBUG: Added form field - ${key}: ${customerData[key]}`);
             });
 
             // Submit form in hidden iframe to avoid page navigation
@@ -530,6 +633,8 @@ class CustomerQuoteForm {
             
             form.target = 'google-sheets-submit';
             document.body.appendChild(form);
+            
+            console.log('🚀 DEBUG: Submitting form to Google Apps Script...');
             form.submit();
             
             // Clean up after 2 seconds
@@ -538,12 +643,11 @@ class CustomerQuoteForm {
                 document.body.removeChild(iframe);
             }, 2000);
 
-            console.log('Data submitted to Google Sheets (form method)');
+            console.log('✅ Customer data submitted to Google Sheets (direct form method)');
             return { status: 'success', message: 'Form submitted' };
         } catch (error) {
-            console.error('Failed to save to Google Sheets:', error);
-            // Don't throw error - we still want to show success to customer
-            // Data is still saved locally as backup
+            console.error('❌ Failed to save to Google Sheets:', error);
+            throw error;
         }
     }
 

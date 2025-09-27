@@ -970,6 +970,9 @@ class CustomerManager {
             'emergency': 'emergency'
         };
 
+        // Parse address into components for Google Sheets compatibility
+        const addressParts = this.parseAddress(submission.address || '');
+
         return {
             id: submission.id || this.generateId(),
             firstName: submission.firstName || '',
@@ -977,20 +980,69 @@ class CustomerManager {
             phone: submission.phone || '',
             email: submission.email || '',
             address: submission.address || '',
+            city: addressParts.city,
+            state: addressParts.state,
+            zip: addressParts.zip,
             serviceType: submission.serviceType || '',
             priority: urgencyToPriority[submission.urgency] || 'medium',
             status: 'initial',
-            productDetails: submission.description || '',
+            notes: submission.description || this.buildNotesFromSubmission(submission),
             budget: submission.budget || '',
             preferredDate: submission.preferredDate || '',
-            notes: this.buildNotesFromSubmission(submission),
             referralSource: submission.heardAbout || '',
             createdAt: submission.timestamp || new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             meetingDate: '', // Will be scheduled later
+            // Legacy fields for backward compatibility
+            productDetails: submission.description || '',
             // Add QR code source indicator
             source: 'QR Code Form'
         };
+    }
+
+    parseAddress(addressString) {
+        // Try to parse city, state, zip from address string
+        // Handles formats like: "123 Main St, Springfield, IL 62701"
+        const parts = {
+            city: '',
+            state: '',
+            zip: ''
+        };
+        
+        if (!addressString) return parts;
+        
+        // Look for zip code (5 digits, optionally followed by dash and 4 more digits)
+        const zipMatch = addressString.match(/\b(\d{5}(?:-\d{4})?)\b/);
+        if (zipMatch) {
+            parts.zip = zipMatch[1];
+        }
+        
+        // Look for state (2 letter abbreviation before zip, or at end)
+        const stateMatch = addressString.match(/\b([A-Z]{2})\b(?:\s+\d{5}|\s*$)/);
+        if (stateMatch) {
+            parts.state = stateMatch[1];
+        }
+        
+        // Extract city (word before state, after last comma)
+        const cityStateZipPattern = /,\s*([^,]+?)\s*,?\s*[A-Z]{2}/;
+        const cityMatch = addressString.match(cityStateZipPattern);
+        if (cityMatch) {
+            parts.city = cityMatch[1].trim();
+        } else {
+            // Fallback: try to extract city from last comma-separated part
+            const commaParts = addressString.split(',');
+            if (commaParts.length >= 2) {
+                const lastPart = commaParts[commaParts.length - 1].trim();
+                const secondLastPart = commaParts[commaParts.length - 2].trim();
+                
+                // If last part has state/zip, city is in second to last part
+                if (lastPart.match(/[A-Z]{2}|\d{5}/)) {
+                    parts.city = secondLastPart;
+                }
+            }
+        }
+        
+        return parts;
     }
 
     buildNotesFromSubmission(submission) {
@@ -1841,24 +1893,31 @@ class CustomerManager {
 
     convertCSVToCustomers(rows) {
         return rows.map(row => {
+            const address = row['address'] || row['Address'] || '';
+            const addressParts = this.parseAddress(address);
+            
             return {
                 id: this.generateId(),
                 firstName: row['firstName'] || row['First Name'] || '',
                 lastName: row['lastName'] || row['Last Name'] || '',
                 phone: row['phone'] || row['Phone'] || '',
                 email: row['email'] || row['Email'] || '',
-                address: row['address'] || row['Address'] || '',
+                address: address,
+                city: row['city'] || row['City'] || addressParts.city,
+                state: row['state'] || row['State'] || addressParts.state,
+                zip: row['zip'] || row['Zip'] || addressParts.zip,
                 serviceType: row['serviceType'] || row['Service Type'] || '',
-                priority: this.mapUrgencyToPriority(row['urgency'] || row['Urgency']),
-                status: 'initial',
-                productDetails: row['description'] || row['Description'] || '',
+                priority: this.mapUrgencyToPriority(row['urgency'] || row['Urgency'] || row['priority'] || row['Priority']),
+                status: row['status'] || row['Status'] || 'initial',
+                notes: row['notes'] || row['Notes'] || row['description'] || row['Description'] || row['additionalNotes'] || row['Additional Notes'] || '',
                 budget: row['budget'] || row['Budget'] || '',
                 preferredDate: row['preferredDate'] || row['Preferred Date'] || '',
-                notes: row['additionalNotes'] || row['Additional Notes'] || row['Notes'] || '',
                 referralSource: row['heardAbout'] || row['Heard About'] || '',
-                createdAt: row['timestamp'] || row['Timestamp'] || new Date().toISOString(),
+                createdAt: row['timestamp'] || row['Timestamp'] || row['dateAdded'] || row['Date Added'] || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                meetingDate: '',
+                meetingDate: row['meetingDate'] || row['Meeting Date'] || '',
+                // Legacy fields for backward compatibility
+                productDetails: row['description'] || row['Description'] || '',
                 source: 'CSV Import'
             };
         }).filter(customer => customer.firstName && customer.phone); // Only valid entries

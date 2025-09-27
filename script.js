@@ -1435,6 +1435,21 @@ class CustomerManager {
     }
 
     convertSheetRowToCustomer(sheetRow) {
+        // Handle priority: if it's numeric (1-5), convert to text; if it's urgency text, map it; otherwise use existing priority text
+        let priority = 'medium'; // default
+        if (sheetRow.priority) {
+            // If priority is numeric (1-5), convert to text
+            if (!isNaN(sheetRow.priority)) {
+                priority = this.mapNumericPriorityToText(sheetRow.priority);
+            } else {
+                // If priority is already text, use it directly
+                priority = sheetRow.priority.toLowerCase();
+            }
+        } else if (sheetRow.urgency) {
+            // Fallback: convert urgency to priority
+            priority = this.mapUrgencyToPriority(sheetRow.urgency);
+        }
+
         return {
             id: this.generateId(),
             firstName: sheetRow.firstName || '',
@@ -1443,9 +1458,9 @@ class CustomerManager {
             email: sheetRow.email || '',
             address: sheetRow.address || '',
             serviceType: sheetRow.serviceType || '',
-            priority: this.mapUrgencyToPriority(sheetRow.urgency),
+            priority: priority,
             status: 'initial',
-            productDetails: sheetRow.description || '',
+            productDetails: sheetRow.description || sheetRow.notes || '',
             budget: sheetRow.budget || '', 
             preferredDate: sheetRow.preferredDate || '',
             notes: sheetRow.additionalNotes || '',
@@ -1466,6 +1481,45 @@ class CustomerManager {
             'emergency': 'emergency'
         };
         return urgencyMap[urgency] || 'medium';
+    }
+
+    // Convert numeric priority (1-5) back to text labels
+    mapNumericPriorityToText(numericPriority) {
+        const priorityMap = {
+            '1': 'low',
+            '2': 'low', 
+            '3': 'medium',
+            '4': 'high',
+            '5': 'emergency',
+            1: 'low',
+            2: 'low', 
+            3: 'medium',
+            4: 'high',
+            5: 'emergency'
+        };
+        return priorityMap[numericPriority] || 'medium';
+    }
+
+    // Parse priority from CSV/Google Sheets row - handles both numeric and text priorities
+    parsePriorityFromRow(row) {
+        const priorityValue = row['priority'] || row['Priority'] || row['urgency'] || row['Urgency'];
+        
+        if (!priorityValue) {
+            return 'medium'; // default
+        }
+        
+        // If it's numeric (1-5), convert to text
+        if (!isNaN(priorityValue)) {
+            return this.mapNumericPriorityToText(priorityValue);
+        }
+        
+        // If it's urgency text, map it to priority
+        if (['flexible', 'month', 'weeks', 'urgent', 'emergency'].includes(priorityValue.toLowerCase())) {
+            return this.mapUrgencyToPriority(priorityValue);
+        }
+        
+        // If it's already priority text, use it (ensure lowercase)
+        return priorityValue.toLowerCase();
     }
 
     // Test Data Generation
@@ -1907,7 +1961,7 @@ class CustomerManager {
                 state: row['state'] || row['State'] || addressParts.state,
                 zip: row['zip'] || row['Zip'] || addressParts.zip,
                 serviceType: row['serviceType'] || row['Service Type'] || '',
-                priority: this.mapUrgencyToPriority(row['urgency'] || row['Urgency'] || row['priority'] || row['Priority']),
+                priority: this.parsePriorityFromRow(row),
                 status: row['status'] || row['Status'] || 'initial',
                 notes: row['notes'] || row['Notes'] || row['description'] || row['Description'] || row['additionalNotes'] || row['Additional Notes'] || '',
                 budget: row['budget'] || row['Budget'] || '',

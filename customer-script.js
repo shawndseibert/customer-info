@@ -520,7 +520,8 @@ class CustomerQuoteForm {
             serviceType: getServiceTypeLabel(formData.serviceType),
             status: 'initial',
             priority: urgencyToPriority[formData.urgency] || 'medium',
-            notes: this.buildNotesFromForm(formData),
+            productDetails: formData.description || '', // Store main description in product details
+            notes: this.buildContactNotesFromForm(formData), // Store contact info and preferences in notes
             dateAdded: new Date(formData.timestamp).toLocaleDateString(),
             budget: getBudgetLabel(formData.budget),
             preferredDate: formData.preferredDate || ''
@@ -559,7 +560,7 @@ class CustomerQuoteForm {
         };
     }
 
-    // Build comprehensive notes from form data
+    // Build comprehensive notes from form data (legacy function for backward compatibility)
     buildNotesFromForm(formData) {
         const notes = [];
         
@@ -588,9 +589,40 @@ class CustomerQuoteForm {
         }
         
         notes.push(`Source: QR Code Form`);
+        
         notes.push(`Submitted: ${new Date(formData.timestamp).toLocaleString()}`);
         
-        return notes.join('\n');
+        return notes.join(' ');
+    }
+
+    // Build contact and preference notes (excluding main description)
+    buildContactNotesFromForm(formData) {
+        const notes = [];
+        
+        if (formData.urgency) {
+            notes.push(`Urgency: ${getUrgencyLabel(formData.urgency)}`);
+        }
+        
+        if (formData.contactPreference) {
+            notes.push(`Contact Preference: ${getContactPreferenceLabel(formData.contactPreference)}`);
+        }
+        
+        if (formData.contactTime) {
+            notes.push(`Best Contact Time: ${getContactTimeLabel(formData.contactTime)}`);
+        }
+        
+        if (formData.heardAbout) {
+            notes.push(`How they heard about us: ${getHeardAboutLabel(formData.heardAbout)}`);
+        }
+        
+        if (formData.additionalNotes) {
+            notes.push(`Additional Notes: ${formData.additionalNotes}`);
+        }
+        
+        notes.push(`Source: QR Code Form`);
+        notes.push(`Submitted: ${new Date(formData.timestamp).toLocaleString()}`);
+        
+        return notes.join(' ');
     }
 
     // Fallback method using direct form submission with corrected mapping

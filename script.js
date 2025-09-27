@@ -1492,10 +1492,11 @@ class CustomerManager {
                 serviceType: customerData.serviceType || customerData.service || '',
                 status: customerData.status || '',
                 priority: customerData.priority || '',
-                notes: customerData.notes || customerData.productDetails || '',
+                notes: customerData.notes || '',
                 dateAdded: customerData.dateAdded || new Date().toISOString(),
                 budget: customerData.budget || '',
-                preferredDate: customerData.preferredDate || ''
+                preferredDate: customerData.preferredDate || '',
+                productDetails: customerData.productDetails || ''
             });
             
             script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;
@@ -1560,10 +1561,11 @@ class CustomerManager {
                 serviceType: customerData.serviceType || customerData.service || '',
                 status: customerData.status || '',
                 priority: customerData.priority || '',
-                notes: customerData.notes || customerData.productDetails || '',
+                notes: customerData.notes || '',
                 dateAdded: customerData.dateAdded || new Date().toISOString(),
                 budget: customerData.budget || '',
-                preferredDate: customerData.preferredDate || ''
+                preferredDate: customerData.preferredDate || '',
+                productDetails: customerData.productDetails || ''
             });
             
             script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;

@@ -90,9 +90,27 @@ function doGet(e) {
         };
       } else {
           // Convert to your expected format (matching YOUR exact column order)
-          // Your Columns: A=ID, B=First, C=Last, D=Phone, E=Email, F=Address, G=City, H=State, I=Zip, J=Service, K=Status, L=Priority, M=Notes, N=Date Added, O=Budget, P=Preferred Date
+          // Your Columns: A=ID, B=First, C=Last, D=Phone, E=Email, F=Address, G=City, H=State, I=Zip, J=Service, K=Status, L=Priority, M=Notes, N=Date Added, O=Budget, P=Preferred Date, Q=Product Details
           const customers = data.slice(1).map((row, index) => {
             try {
+              // Handle product details and notes separation
+              const fullNotes = row[12] || '';
+              let productDetails = row[16] || ''; // Column Q: Product Details (new column)
+              let cleanNotes = fullNotes;
+              
+              // Check if this is legacy data with "Description:" in notes and no separate productDetails
+              if (fullNotes.includes('Description:') && !productDetails) {
+                // Legacy format: extract description from notes
+                const descriptionMatch = fullNotes.match(/Description:\s*([^]*?)(?:\s+Urgency:|$)/);
+                if (descriptionMatch) {
+                  productDetails = descriptionMatch[1].trim();
+                  // Clean up notes to remove the description part
+                  cleanNotes = fullNotes.replace(/Description:\s*[^]*?(?=\s+Urgency:|$)/, '').trim();
+                  // Clean up any leading/trailing whitespace or punctuation
+                  cleanNotes = cleanNotes.replace(/^[\s,]+|[\s,]+$/g, '');
+                }
+              }
+              
               return {
                 id: row[0] || '',           // Column A: ID
                 firstName: row[1] || '',    // Column B: First
@@ -106,12 +124,12 @@ function doGet(e) {
                 serviceType: row[9] || '',  // Column J: Service (mapped to serviceType)
                 status: normalizeStatus(row[10]) || 'initial',      // Column K: Status (normalized)
                 priority: normalizePriority(row[11]) || 'medium',    // Column L: Priority (normalized)
-                notes: row[12] || '',       // Column M: Notes
+                notes: cleanNotes,          // Column M: Notes (full form details)
                 dateAdded: row[13] || '',   // Column N: Date Added
                 budget: row[14] || '',      // Column O: Budget
                 preferredDate: row[15] || '', // Column P: Preferred Date
                 // Additional fields for form compatibility
-                productDetails: row[12] || '', // Use notes as product details if available
+                productDetails: productDetails, // Extract just the description for product details
                 meetingDate: '',            // Default empty
                 referralSource: '',         // Default empty
                 createdAt: row[13] || new Date().toISOString(), // Use dateAdded as createdAt
@@ -167,7 +185,8 @@ function doGet(e) {
             e.parameter.notes || '',                                 // Column M: Notes
             e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
             e.parameter.budget || '',                                // Column O: Budget
-            e.parameter.preferredDate || ''                          // Column P: Preferred Date
+            e.parameter.preferredDate || '',                         // Column P: Preferred Date
+            e.parameter.productDetails || ''                         // Column Q: Product Details
           ];
           
           // Update the row (customerRowIndex + 1 because getRange is 1-based)
@@ -207,7 +226,7 @@ function doGet(e) {
           };
         } else {
           // Get customer data from parameters (matching YOUR exact header order)
-          // Your Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date
+          // Your Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date, Product Details
           const customerData = [
             customerId || '',                                        // Column A: ID
             e.parameter.firstName || '',                             // Column B: First  
@@ -224,7 +243,8 @@ function doGet(e) {
             e.parameter.notes || '',                                 // Column M: Notes
             e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
             e.parameter.budget || '',                                // Column O: Budget
-            e.parameter.preferredDate || ''                          // Column P: Preferred Date
+            e.parameter.preferredDate || '',                         // Column P: Preferred Date
+            e.parameter.productDetails || ''                         // Column Q: Product Details
           ];
           
           // Add the new row to the sheet
@@ -253,7 +273,7 @@ function doGet(e) {
         const headers = [
           'ID', 'First', 'Last', 'Phone', 'Email', 
           'Address', 'City', 'State', 'Zip', 'Service', 
-          'Status', 'Priority', 'Notes', 'Date Added', 'Budget', 'Preferred Date'
+          'Status', 'Priority', 'Notes', 'Date Added', 'Budget', 'Preferred Date', 'Product Details'
         ];
         
         // Clear first row and set headers
@@ -366,7 +386,8 @@ function handleUpdateCustomer(data) {
       data.notes || '',                                    // Column M: Notes
       data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
       data.budget || '',                                   // Column O: Budget
-      data.preferredDate || ''                             // Column P: Preferred Date
+      data.preferredDate || '',                            // Column P: Preferred Date
+      data.productDetails || ''                            // Column Q: Product Details
     ];
     
     console.log('Updating row', customerRowIndex + 1, 'with data:', customerData);
@@ -494,7 +515,8 @@ function handleAddCustomer(data) {
       data.notes || '',                                    // Column M: Notes
       data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
       data.budget || '',                                   // Column O: Budget
-      data.preferredDate || ''                             // Column P: Preferred Date
+      data.preferredDate || '',                            // Column P: Preferred Date
+      data.productDetails || ''                            // Column Q: Product Details
     ];
     
     console.log('Appending row with data:', customerData);

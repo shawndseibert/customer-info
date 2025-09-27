@@ -702,6 +702,21 @@ body.dark-theme .legend-item span {
 .priority-low { background: #c6f6d5; color: #276749; }
 .priority-emergency { background: #e53e3e; color: white; animation: pulse 2s infinite; }
 
+/* Priority badge for details modal (inline, not absolute) */
+.priority-badge-inline {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-badge-inline.priority-high { background: #fed7d7; color: #c53030; }
+.priority-badge-inline.priority-medium { background: #feebc8; color: #c05621; }
+.priority-badge-inline.priority-low { background: #c6f6d5; color: #276749; }
+.priority-badge-inline.priority-emergency { background: #e53e3e; color: white; animation: pulse 2s infinite; }
+
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }

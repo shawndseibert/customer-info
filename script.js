@@ -671,6 +671,14 @@ class CustomerManager {
         const customer = this.customers.find(c => c.id === customerId);
         if (!customer) return;
 
+        // Debug: Check priority field
+        console.log('Customer priority debug:', {
+            id: customer.id,
+            priority: customer.priority,
+            allFields: Object.keys(customer),
+            customerData: customer
+        });
+
         this.currentEditingId = customerId;
         const modal = document.getElementById('customerModal');
         const modalBody = document.getElementById('modalBody');
@@ -710,7 +718,7 @@ class CustomerManager {
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Priority</span>
-                        <span class="detail-value priority-badge priority-${customer.priority || 'medium'}">${(customer.priority || 'medium').toUpperCase()}</span>
+                        <span class="detail-value priority-badge-inline priority-${customer.priority || 'medium'}">${(customer.priority || 'medium').toUpperCase()}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Status</span>

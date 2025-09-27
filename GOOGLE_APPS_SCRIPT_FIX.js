@@ -63,7 +63,9 @@ function doGet(e) {
               console.error('Error processing row', index + 2, ':', error, 'Row data:', row);
               return null;
             }
-          }).filter(customer => customer !== null);        result = {
+          }).filter(customer => customer !== null);
+        
+        result = {
           status: 'success',
           data: customers,
           totalRows: data.length,

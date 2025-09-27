@@ -463,6 +463,9 @@ class CustomerManager {
         if (index !== -1) {
             this.customers[index] = { ...this.customers[index], ...customerData };
             this.saveCustomers();
+            
+            // Sync update to Google Sheets
+            this.updateCustomerInGoogleSheets(this.customers[index]);
         }
     }
 
@@ -485,6 +488,9 @@ class CustomerManager {
             this.saveCustomers();
             // Note: renderCustomers() and updateStats() are now called by saveCustomers()
             this.showNotification(`Status updated to "${this.getStatusLabel(newStatus)}"`, 'success');
+            
+            // Sync status update to Google Sheets
+            this.updateCustomerInGoogleSheets(this.customers[customerIndex]);
         }
     }
 
@@ -1216,8 +1222,11 @@ class CustomerManager {
                         return;
                     }
 
-                    // Check if customer already exists by phone number
-                    const existingCustomerIndex = this.customers.findIndex(c => c.phone === sheetRow.phone);
+                    // Check if customer already exists by ID first, then by phone number
+                    let existingCustomerIndex = this.customers.findIndex(c => c.id === sheetRow.id);
+                    if (existingCustomerIndex === -1) {
+                        existingCustomerIndex = this.customers.findIndex(c => c.phone === sheetRow.phone);
+                    }
                     
                     const customerData = this.convertSheetRowToCustomer(sheetRow);
 
@@ -1228,7 +1237,8 @@ class CustomerManager {
                         const existingDate = new Date(existingCustomer.updatedAt || existingCustomer.createdAt || 0);
                         
                         if (sheetDate > existingDate) {
-                            this.customers[existingCustomerIndex] = { ...existingCustomer, ...customerData, id: existingCustomer.id };
+                            // Use the Google Sheets ID to ensure consistency
+                            this.customers[existingCustomerIndex] = { ...existingCustomer, ...customerData, id: customerData.id };
                             updatedCount++;
                         } else {
                             skippedCount++;
@@ -1310,6 +1320,32 @@ class CustomerManager {
         }
     }
 
+    // Update existing customer in Google Sheets
+    async updateCustomerInGoogleSheets(customerData) {
+        try {
+            // Don't sync if running locally
+            if (window.location.protocol === 'file:') {
+                console.info('Google Sheets update disabled for local development');
+                return;
+            }
+
+            console.log('Updating customer in Google Sheets:', customerData);
+            
+            // Use form submission to send update to Google Apps Script
+            const result = await this.sendCustomerUpdateToGoogleSheets(customerData);
+            
+            if (result.success) {
+                this.showNotification('Customer updated in Google Sheets!', 'success');
+            } else {
+                console.warn('Failed to update customer in Google Sheets');
+                this.showNotification('Customer updated locally. Google Sheets update failed.', 'warning');
+            }
+        } catch (error) {
+            console.error('Error updating customer in Google Sheets:', error);
+            this.showNotification('Customer updated locally. Google Sheets update failed.', 'warning');
+        }
+    }
+
     sendCustomerToGoogleSheets(customerData) {
         return new Promise((resolve, reject) => {
             const callbackName = 'googleSheetsAddCallback_' + Date.now();
@@ -1373,6 +1409,74 @@ class CustomerManager {
                 console.warn('Google Sheets add request timed out');
                 cleanup();
                 resolve({ success: false, duplicate: false });
+            }, 10000); // 10 second timeout
+            
+            document.head.appendChild(script);
+        });
+    }
+
+    // Send customer update to Google Sheets via JSONP
+    sendCustomerUpdateToGoogleSheets(customerData) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'googleSheetsUpdateCallback_' + Date.now();
+            
+            // Create global callback
+            window[callbackName] = (response) => {
+                console.log('Google Sheets update response:', response);
+                cleanup();
+                
+                if (response && response.status === 'success') {
+                    resolve({ success: true });
+                } else {
+                    resolve({ success: false });
+                }
+            };
+            
+            const cleanup = () => {
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            };
+            
+            // Create script element for JSONP
+            const script = document.createElement('script');
+            
+            // Prepare customer data as URL parameters
+            const params = new URLSearchParams({
+                action: 'updateCustomer',
+                callback: callbackName,
+                id: customerData.id,
+                firstName: customerData.firstName || '',
+                lastName: customerData.lastName || '',
+                phone: customerData.phone || '',
+                email: customerData.email || '',
+                address: customerData.address || '',
+                city: customerData.city || '',
+                state: customerData.state || '',
+                zip: customerData.zip || '',
+                serviceType: customerData.serviceType || customerData.service || '',
+                status: customerData.status || '',
+                priority: customerData.priority || '',
+                notes: customerData.notes || customerData.productDetails || '',
+                dateAdded: customerData.dateAdded || new Date().toISOString(),
+                budget: customerData.budget || '',
+                preferredDate: customerData.preferredDate || ''
+            });
+            
+            script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;
+            
+            script.onerror = () => {
+                console.error('Failed to load Google Apps Script for updating customer');
+                cleanup();
+                resolve({ success: false });
+            };
+            
+            // Set timeout for request
+            setTimeout(() => {
+                console.warn('Google Sheets update request timed out');
+                cleanup();
+                resolve({ success: false });
             }, 10000); // 10 second timeout
             
             document.head.appendChild(script);
@@ -1451,7 +1555,7 @@ class CustomerManager {
         }
 
         return {
-            id: this.generateId(),
+            id: sheetRow.id || this.generateId(), // Use existing Google Sheets ID if available
             firstName: sheetRow.firstName || '',
             lastName: sheetRow.lastName || '', 
             phone: sheetRow.phone || '',
@@ -1951,7 +2055,7 @@ class CustomerManager {
             const addressParts = this.parseAddress(address);
             
             return {
-                id: this.generateId(),
+                id: row['id'] || row['ID'] || this.generateId(), // Use existing ID if available
                 firstName: row['firstName'] || row['First Name'] || '',
                 lastName: row['lastName'] || row['Last Name'] || '',
                 phone: row['phone'] || row['Phone'] || '',

@@ -32,6 +32,8 @@ function doPost(e) {
     
     if (action === 'addCustomer') {
       return handleAddCustomer(postData);
+    } else if (action === 'updateCustomer') {
+      return handleUpdateCustomer(postData);
     }
     
     return ContentService
@@ -120,6 +122,62 @@ function doGet(e) {
           data: customers,
           totalRows: data.length,
           processedCustomers: customers.length,
+          timestamp: new Date().toISOString()
+        };
+      }
+    } else if (action === 'updateCustomer') {
+      // Update existing customer in Google Sheets
+      try {
+        const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
+        const customerId = e.parameter.id;
+        
+        // Find existing customer by ID
+        const data = sheet.getDataRange().getValues();
+        const customerRowIndex = data.findIndex(row => row[0] === customerId);
+        
+        if (customerRowIndex === -1) {
+          result = {
+            status: 'error',
+            message: 'Customer not found in Google Sheets',
+            customerId: customerId,
+            timestamp: new Date().toISOString()
+          };
+        } else {
+          // Update customer data (matching YOUR exact header order)
+          const customerData = [
+            customerId,                                              // Column A: ID
+            e.parameter.firstName || '',                             // Column B: First  
+            e.parameter.lastName || '',                              // Column C: Last
+            e.parameter.phone || '',                                 // Column D: Phone
+            e.parameter.email || '',                                 // Column E: Email
+            e.parameter.address || '',                               // Column F: Address
+            e.parameter.city || '',                                  // Column G: City
+            e.parameter.state || '',                                 // Column H: State
+            e.parameter.zip || '',                                   // Column I: Zip
+            e.parameter.serviceType || e.parameter.service || '',    // Column J: Service
+            e.parameter.status || '',                                // Column K: Status
+            e.parameter.priority || '',                              // Column L: Priority
+            e.parameter.notes || '',                                 // Column M: Notes
+            e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
+            e.parameter.budget || '',                                // Column O: Budget
+            e.parameter.preferredDate || ''                          // Column P: Preferred Date
+          ];
+          
+          // Update the row (customerRowIndex + 1 because getRange is 1-based)
+          sheet.getRange(customerRowIndex + 1, 1, 1, customerData.length).setValues([customerData]);
+          
+          result = {
+            status: 'success',
+            message: 'Customer updated in Google Sheets',
+            customerId: customerId,
+            timestamp: new Date().toISOString()
+          };
+        }
+      } catch (error) {
+        console.error('Error updating customer in sheet:', error);
+        result = {
+          status: 'error',
+          message: 'Failed to update customer in Google Sheets: ' + error.toString(),
           timestamp: new Date().toISOString()
         };
       }
@@ -253,6 +311,75 @@ function doGet(e) {
     
     return ContentService
       .createTextOutput(JSON.stringify(errorResult))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function handleUpdateCustomer(data) {
+  try {
+    const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
+    const customerId = data.id;
+    
+    console.log('Updating customer with data:', data);
+    
+    // Find existing customer by ID
+    const existingData = sheet.getDataRange().getValues();
+    const customerRowIndex = existingData.findIndex(row => row[0] === customerId);
+    
+    if (customerRowIndex === -1) {
+      console.log('Customer not found for update:', customerId);
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          status: 'error',
+          message: 'Customer not found in Google Sheets',
+          customerId: customerId,
+          timestamp: new Date().toISOString()
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Prepare updated customer data with correct column mapping
+    const customerData = [
+      customerId,                                          // Column A: ID
+      data.firstName || '',                                // Column B: First  
+      data.lastName || '',                                 // Column C: Last
+      data.phone || '',                                    // Column D: Phone
+      data.email || '',                                    // Column E: Email
+      data.address || '',                                  // Column F: Address
+      data.city || '',                                     // Column G: City
+      data.state || '',                                    // Column H: State
+      data.zip || '',                                      // Column I: Zip
+      data.serviceType || data.service || '',              // Column J: Service
+      data.status || 'New Lead',                           // Column K: Status
+      data.priority || '',                                 // Column L: Priority
+      data.notes || '',                                    // Column M: Notes
+      data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
+      data.budget || '',                                   // Column O: Budget
+      data.preferredDate || ''                             // Column P: Preferred Date
+    ];
+    
+    console.log('Updating row', customerRowIndex + 1, 'with data:', customerData);
+    
+    // Update the row (customerRowIndex + 1 because getRange is 1-based)
+    sheet.getRange(customerRowIndex + 1, 1, 1, customerData.length).setValues([customerData]);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'success',
+        message: 'Customer updated in Google Sheets',
+        customerId: customerId,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Failed to update customer: ' + error.toString(),
+        timestamp: new Date().toISOString()
+      }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }

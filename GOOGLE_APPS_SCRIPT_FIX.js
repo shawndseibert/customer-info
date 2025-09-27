@@ -38,26 +38,27 @@ function doGet(e) {
           timestamp: new Date().toISOString()
         };
       } else {
-          // Convert to your expected format
+          // Convert to your expected format (matching YOUR exact column order)
+          // Your Columns: A=ID, B=First, C=Last, D=Phone, E=Email, F=Address, G=City, H=State, I=Zip, J=Service, K=Status, L=Priority, M=Notes, N=Date Added, O=Budget, P=Preferred Date
           const customers = data.slice(1).map((row, index) => {
             try {
               return {
-                id: row[0] || '',
-                firstName: row[1] || '',
-                lastName: row[2] || '',
-                phone: row[3] || '',
-                email: row[4] || '',
-                address: row[5] || '',
-                city: row[6] || '',
-                state: row[7] || '',
-                zip: row[8] || '',
-                serviceType: row[9] || '', // Map to serviceType for consistency with form
-                status: row[10] || '',
-                priority: row[11] || '',
-                notes: row[12] || '',
-                dateAdded: row[13] || '',
-                budget: row[14] || '',
-                preferredDate: row[15] || ''
+                id: row[0] || '',           // Column A: ID
+                firstName: row[1] || '',    // Column B: First
+                lastName: row[2] || '',     // Column C: Last
+                phone: row[3] || '',        // Column D: Phone
+                email: row[4] || '',        // Column E: Email
+                address: row[5] || '',      // Column F: Address
+                city: row[6] || '',         // Column G: City
+                state: row[7] || '',        // Column H: State
+                zip: row[8] || '',          // Column I: Zip
+                serviceType: row[9] || '',  // Column J: Service (mapped to serviceType)
+                status: row[10] || '',      // Column K: Status
+                priority: row[11] || '',    // Column L: Priority
+                notes: row[12] || '',       // Column M: Notes
+                dateAdded: row[13] || '',   // Column N: Date Added
+                budget: row[14] || '',      // Column O: Budget
+                preferredDate: row[15] || '' // Column P: Preferred Date
               };
             } catch (error) {
               console.error('Error processing row', index + 2, ':', error, 'Row data:', row);
@@ -91,25 +92,25 @@ function doGet(e) {
             timestamp: new Date().toISOString()
           };
         } else {
-          // Get customer data from parameters (matching header order)
-          // Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date
+          // Get customer data from parameters (matching YOUR exact header order)
+          // Your Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date
           const customerData = [
-            customerId || '',
-            e.parameter.firstName || '',
-            e.parameter.lastName || '',
-            e.parameter.phone || '',
-            e.parameter.email || '',
-            e.parameter.address || '',
-            e.parameter.city || '',
-            e.parameter.state || '',
-            e.parameter.zip || '',
-            e.parameter.serviceType || e.parameter.service || '', // Handle both serviceType and service
-            e.parameter.status || '',
-            e.parameter.priority || '',
-            e.parameter.notes || '',
-            e.parameter.dateAdded || new Date().toISOString(),
-            e.parameter.budget || '',
-            e.parameter.preferredDate || ''
+            customerId || '',                                        // Column A: ID
+            e.parameter.firstName || '',                             // Column B: First  
+            e.parameter.lastName || '',                              // Column C: Last
+            e.parameter.phone || '',                                 // Column D: Phone
+            e.parameter.email || '',                                 // Column E: Email
+            e.parameter.address || '',                               // Column F: Address
+            e.parameter.city || '',                                  // Column G: City
+            e.parameter.state || '',                                 // Column H: State
+            e.parameter.zip || '',                                   // Column I: Zip
+            e.parameter.serviceType || e.parameter.service || '',    // Column J: Service
+            e.parameter.status || '',                                // Column K: Status
+            e.parameter.priority || '',                              // Column L: Priority
+            e.parameter.notes || '',                                 // Column M: Notes
+            e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
+            e.parameter.budget || '',                                // Column O: Budget
+            e.parameter.preferredDate || ''                          // Column P: Preferred Date
           ];
           
           // Add the new row to the sheet

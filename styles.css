@@ -1498,6 +1498,12 @@ body.dark-theme .customer-card[data-status="follow-up"] {
     background: rgba(239, 68, 68, 0.2); /* Red tint */
 }
 
+/* Dark theme - Customer notes (italic text) */
+body.dark-theme .customer-notes {
+    color: #e2e8f0; /* Much lighter gray for better readability */
+    border-top-color: #4a5568; /* Darker border for dark theme */
+}
+
 /* Improve description readability in dark theme */
 body.dark-theme .customer-details {
     color: #e2e8f0; /* Brighter text for better readability */

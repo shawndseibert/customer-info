@@ -1668,11 +1668,11 @@ class CustomerManager {
             serviceType: sheetRow.serviceType || '',
             priority: priority,
             status: this.mapStatusToSystemStatus(sheetRow.status),
-            productDetails: sheetRow.description || sheetRow.notes || '',
+            productDetails: sheetRow.productDetails || '', // Use the properly separated productDetails field
             budget: sheetRow.budget || '', 
             preferredDate: sheetRow.preferredDate || '',
             meetingDate: sheetRow.meetingDate || '',
-            notes: sheetRow.notes || sheetRow.additionalNotes || '',
+            notes: sheetRow.notes || '', // Use the cleaned notes field (without description)
             referralSource: sheetRow.heardAbout || sheetRow.referralSource || '',
             createdAt: sheetRow.timestamp || sheetRow.dateAdded || new Date().toISOString(),
             updatedAt: new Date().toISOString(),

@@ -386,9 +386,12 @@
                 // Store authentication in session (will expire when browser closes)
                 sessionStorage.setItem('adminAuthenticated', 'true');
                 
-                // Match panel heights after admin content is visible
+                // Initialize CustomerManager after admin content is visible
                 setTimeout(() => {
                     matchPanelHeights();
+                    if (window.initializeCustomerManager) {
+                        window.initializeCustomerManager();
+                    }
                 }, 100);
                 
                 console.log(`Admin access granted via ${authType}`);
@@ -408,9 +411,12 @@
                 document.getElementById('passwordScreen').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
                 
-                // Match panel heights after content is visible
+                // Match panel heights after content is visible and initialize CustomerManager
                 setTimeout(() => {
                     matchPanelHeights();
+                    if (window.initializeCustomerManager) {
+                        window.initializeCustomerManager();
+                    }
                 }, 100);
             } else {
                 // Update UI based on device trust status

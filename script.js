@@ -15,49 +15,59 @@ class CustomerManager {
 
     // Event Bindings
     bindEvents() {
+        // Helper function to safely add event listeners
+        const safeAddEventListener = (elementId, event, handler) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.addEventListener(event, handler);
+            } else {
+                console.warn(`Element with ID '${elementId}' not found`);
+            }
+        };
+
         // Form submission
-        document.getElementById('customerForm').addEventListener('submit', (e) => {
+        safeAddEventListener('customerForm', 'submit', (e) => {
             e.preventDefault();
             this.handleFormSubmit();
         });
 
         // Clear form
-        document.getElementById('clearForm').addEventListener('click', () => {
+        safeAddEventListener('clearForm', 'click', () => {
             this.clearForm();
         });
 
         // Search functionality
-        document.getElementById('searchInput').addEventListener('input', (e) => {
+        safeAddEventListener('searchInput', 'input', (e) => {
             this.filterCustomers();
         });
 
         // Status filter
-        document.getElementById('statusFilter').addEventListener('change', () => {
+        safeAddEventListener('statusFilter', 'change', () => {
             this.filterCustomers();
         });
 
         // Priority filter
-        document.getElementById('priorityFilter').addEventListener('change', () => {
+        safeAddEventListener('priorityFilter', 'change', () => {
             this.filterCustomers();
         });
 
         // Export data
-        document.getElementById('exportData').addEventListener('click', () => {
+        safeAddEventListener('exportData', 'click', () => {
             this.exportData();
         });
 
         // Import QR code submissions
-        document.getElementById('importSubmissions').addEventListener('click', () => {
+        safeAddEventListener('importSubmissions', 'click', () => {
             this.importCustomerSubmissions();
         });
 
         // Import from Google Sheets
-        document.getElementById('syncGoogleSheets').addEventListener('click', () => {
+        safeAddEventListener('syncGoogleSheets', 'click', () => {
             this.syncFromGoogleSheets();
         });
 
         // Push to Google Sheets
-        document.getElementById('pushToGoogleSheets').addEventListener('click', () => {
+        safeAddEventListener('pushToGoogleSheets', 'click', () => {
             this.pushAllToGoogleSheets();
         });
 
@@ -88,28 +98,34 @@ class CustomerManager {
         }
 
         // Modal events
-        document.querySelector('.close').addEventListener('click', () => {
+        const closeButton = document.querySelector('.close');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                this.closeModal();
+            });
+        }
+
+        safeAddEventListener('closeModal', 'click', () => {
             this.closeModal();
         });
 
-        document.getElementById('closeModal').addEventListener('click', () => {
-            this.closeModal();
-        });
-
-        document.getElementById('editCustomer').addEventListener('click', () => {
+        safeAddEventListener('editCustomer', 'click', () => {
             this.editCustomer();
         });
 
-        document.getElementById('deleteCustomer').addEventListener('click', () => {
+        safeAddEventListener('deleteCustomer', 'click', () => {
             this.deleteCustomer();
         });
 
         // Close modal when clicking outside
-        document.getElementById('customerModal').addEventListener('click', (e) => {
-            if (e.target.id === 'customerModal') {
-                this.closeModal();
-            }
-        });
+        const customerModal = document.getElementById('customerModal');
+        if (customerModal) {
+            customerModal.addEventListener('click', (e) => {
+                if (e.target.id === 'customerModal') {
+                    this.closeModal();
+                }
+            });
+        }
 
         // Auto-save form data on input changes
         const formInputs = document.querySelectorAll('#customerForm input, #customerForm select, #customerForm textarea');
@@ -2229,7 +2245,27 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize the application when the DOM is loaded
+// Initialize the application when the DOM is loaded AND admin content is visible
 document.addEventListener('DOMContentLoaded', () => {
-    window.customerManager = new CustomerManager();
+    // Check if admin content is visible, if not wait for it
+    function initializeWhenReady() {
+        const adminContent = document.getElementById('adminContent');
+        if (adminContent && adminContent.style.display !== 'none') {
+            console.log('Admin content is visible, initializing CustomerManager');
+            window.customerManager = new CustomerManager();
+        } else {
+            console.log('Admin content not visible yet, waiting...');
+            setTimeout(initializeWhenReady, 100);
+        }
+    }
+    
+    initializeWhenReady();
 });
+
+// Also provide a global function to initialize after password is entered
+window.initializeCustomerManager = function() {
+    if (!window.customerManager) {
+        console.log('Initializing CustomerManager after password entry');
+        window.customerManager = new CustomerManager();
+    }
+};

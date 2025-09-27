@@ -38,34 +38,32 @@ function doGet(e) {
           timestamp: new Date().toISOString()
         };
       } else {
-        // Convert to your expected format
-        const customers = data.slice(1).map((row, index) => {
-          try {
-            return {
-              id: row[0] || '',
-              firstName: row[1] || '',
-              lastName: row[2] || '',
-              phone: row[3] || '',
-              email: row[4] || '',
-              address: row[5] || '',
-              city: row[6] || '',
-              state: row[7] || '',
-              zip: row[8] || '',
-              service: row[9] || '',
-              status: row[10] || '',
-              priority: row[11] || '',
-              notes: row[12] || '',
-              dateAdded: row[13] || '',
-              budget: row[14] || '',
-              preferredDate: row[15] || ''
-            };
-          } catch (error) {
-            console.error('Error processing row', index + 2, ':', error, 'Row data:', row);
-            return null;
-          }
-        }).filter(customer => customer !== null);
-        
-        result = {
+          // Convert to your expected format
+          const customers = data.slice(1).map((row, index) => {
+            try {
+              return {
+                id: row[0] || '',
+                firstName: row[1] || '',
+                lastName: row[2] || '',
+                phone: row[3] || '',
+                email: row[4] || '',
+                address: row[5] || '',
+                city: row[6] || '',
+                state: row[7] || '',
+                zip: row[8] || '',
+                serviceType: row[9] || '', // Map to serviceType for consistency with form
+                status: row[10] || '',
+                priority: row[11] || '',
+                notes: row[12] || '',
+                dateAdded: row[13] || '',
+                budget: row[14] || '',
+                preferredDate: row[15] || ''
+              };
+            } catch (error) {
+              console.error('Error processing row', index + 2, ':', error, 'Row data:', row);
+              return null;
+            }
+          }).filter(customer => customer !== null);        result = {
           status: 'success',
           data: customers,
           totalRows: data.length,
@@ -91,7 +89,8 @@ function doGet(e) {
             timestamp: new Date().toISOString()
           };
         } else {
-          // Get customer data from parameters
+          // Get customer data from parameters (matching header order)
+          // Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date
           const customerData = [
             customerId || '',
             e.parameter.firstName || '',
@@ -102,7 +101,7 @@ function doGet(e) {
             e.parameter.city || '',
             e.parameter.state || '',
             e.parameter.zip || '',
-            e.parameter.service || '',
+            e.parameter.serviceType || e.parameter.service || '', // Handle both serviceType and service
             e.parameter.status || '',
             e.parameter.priority || '',
             e.parameter.notes || '',

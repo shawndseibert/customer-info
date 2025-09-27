@@ -1291,7 +1291,7 @@ class CustomerManager {
                 city: customerData.city || '',
                 state: customerData.state || '',
                 zip: customerData.zip || '',
-                service: customerData.serviceType || customerData.service || '',
+                serviceType: customerData.serviceType || customerData.service || '',
                 status: customerData.status || '',
                 priority: customerData.priority || '',
                 notes: customerData.notes || customerData.productDetails || '',

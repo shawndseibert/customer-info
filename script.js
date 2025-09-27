@@ -1563,7 +1563,7 @@ class CustomerManager {
             address: sheetRow.address || '',
             serviceType: sheetRow.serviceType || '',
             priority: priority,
-            status: 'initial',
+            status: this.mapStatusToSystemStatus(sheetRow.status),
             productDetails: sheetRow.description || sheetRow.notes || '',
             budget: sheetRow.budget || '', 
             preferredDate: sheetRow.preferredDate || '',
@@ -1574,6 +1574,31 @@ class CustomerManager {
             meetingDate: '',
             source: 'Customer Form'
         };
+    }
+
+    mapStatusToSystemStatus(status) {
+        if (!status) return 'initial';
+        
+        // Convert status to lowercase for comparison
+        const statusLower = status.toLowerCase();
+        
+        // Map various status values to system standards
+        const statusMap = {
+            'new lead': 'initial',
+            'initial contact': 'initial',
+            'initial': 'initial',
+            'quote provided': 'quoted',
+            'quoted': 'quoted',
+            'work scheduled': 'scheduled',
+            'scheduled': 'scheduled',
+            'in progress': 'in-progress',
+            'in-progress': 'in-progress',
+            'completed': 'completed',
+            'follow-up needed': 'follow-up',
+            'follow-up': 'follow-up'
+        };
+        
+        return statusMap[statusLower] || 'initial';
     }
 
     mapUrgencyToPriority(urgency) {

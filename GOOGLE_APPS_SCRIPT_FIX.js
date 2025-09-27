@@ -104,8 +104,8 @@ function doGet(e) {
                 state: row[7] || '',        // Column H: State
                 zip: row[8] || '',          // Column I: Zip
                 serviceType: row[9] || '',  // Column J: Service (mapped to serviceType)
-                status: row[10] || '',      // Column K: Status
-                priority: row[11] || '',    // Column L: Priority
+                status: normalizeStatus(row[10]) || 'initial',      // Column K: Status (normalized)
+                priority: normalizePriority(row[11]) || 'medium',    // Column L: Priority (normalized)
                 notes: row[12] || '',       // Column M: Notes
                 dateAdded: row[13] || '',   // Column N: Date Added
                 budget: row[14] || '',      // Column O: Budget
@@ -338,6 +338,10 @@ function handleUpdateCustomer(data) {
         .setMimeType(ContentService.MimeType.JSON);
     }
     
+    // Normalize status and priority
+    const normalizedStatus = normalizeStatus(data.status);
+    const normalizedPriority = normalizePriority(data.priority);
+    
     // Prepare updated customer data with correct column mapping
     const customerData = [
       customerId,                                          // Column A: ID
@@ -350,8 +354,8 @@ function handleUpdateCustomer(data) {
       data.state || '',                                    // Column H: State
       data.zip || '',                                      // Column I: Zip
       data.serviceType || data.service || '',              // Column J: Service
-      data.status || 'New Lead',                           // Column K: Status
-      data.priority || '',                                 // Column L: Priority
+      normalizedStatus,                                    // Column K: Status (normalized)
+      normalizedPriority,                                  // Column L: Priority (normalized)
       data.notes || '',                                    // Column M: Notes
       data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
       data.budget || '',                                   // Column O: Budget
@@ -384,6 +388,57 @@ function handleUpdateCustomer(data) {
   }
 }
 
+function normalizeStatus(status) {
+  if (!status) return 'initial';
+  
+  const statusLower = status.toLowerCase();
+  const statusMap = {
+    'new lead': 'initial',
+    'initial contact': 'initial',
+    'initial': 'initial',
+    'quote provided': 'quoted',
+    'quoted': 'quoted',
+    'work scheduled': 'scheduled',
+    'scheduled': 'scheduled',
+    'in progress': 'in-progress',
+    'in-progress': 'in-progress',
+    'completed': 'completed',
+    'follow-up needed': 'follow-up',
+    'follow-up': 'follow-up'
+  };
+  
+  return statusMap[statusLower] || 'initial';
+}
+
+function normalizePriority(priority) {
+  if (!priority) return 'medium';
+  
+  // If numeric priority (1-5), convert to text
+  if (!isNaN(priority)) {
+    const numPriority = parseInt(priority);
+    const priorityMap = {
+      1: 'low',
+      2: 'low', 
+      3: 'medium',
+      4: 'high',
+      5: 'emergency'
+    };
+    return priorityMap[numPriority] || 'medium';
+  }
+  
+  // If already text, normalize it
+  const priorityLower = priority.toLowerCase();
+  const textMap = {
+    'low': 'low',
+    'medium': 'medium',
+    'high': 'high',
+    'urgent': 'emergency',
+    'emergency': 'emergency'
+  };
+  
+  return textMap[priorityLower] || 'medium';
+}
+
 function handleAddCustomer(data) {
   try {
     const sheet = SpreadsheetApp.openById('1vP2KCZAYfrWFtThDs1fMUCPspVWYOZbdg12UZuMnDWc').getActiveSheet();
@@ -407,6 +462,10 @@ function handleAddCustomer(data) {
         .setMimeType(ContentService.MimeType.JSON);
     }
     
+    // Normalize status and priority
+    const normalizedStatus = normalizeStatus(data.status);
+    const normalizedPriority = normalizePriority(data.priority);
+    
     // Prepare customer data with correct column mapping
     const customerData = [
       customerId,                                          // Column A: ID
@@ -419,8 +478,8 @@ function handleAddCustomer(data) {
       data.state || '',                                    // Column H: State
       data.zip || '',                                      // Column I: Zip
       data.serviceType || data.service || '',              // Column J: Service
-      data.status || 'New Lead',                           // Column K: Status
-      data.priority || '',                                 // Column L: Priority
+      normalizedStatus,                                    // Column K: Status (normalized)
+      normalizedPriority,                                  // Column L: Priority (normalized)
       data.notes || '',                                    // Column M: Notes
       data.dateAdded || new Date().toLocaleDateString(),   // Column N: Date Added
       data.budget || '',                                   // Column O: Budget

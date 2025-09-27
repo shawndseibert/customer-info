@@ -1906,14 +1906,18 @@ class CustomerManager {
             
             // Set up callback function
             window[callbackName] = (data) => {
+                console.log('Google Sheets callback received:', data);
+                
                 // Clean up
                 document.head.removeChild(script);
                 delete window[callbackName];
                 
                 if (data && data.status === 'success') {
+                    console.log('Google Sheets data loaded successfully:', data.data?.length, 'customers');
                     resolve(data);
                 } else {
-                    reject(new Error('Invalid response from Google Sheets'));
+                    console.error('Invalid Google Sheets response:', data);
+                    reject(new Error(`Invalid response from Google Sheets: ${data?.message || 'Unknown error'}`));
                 }
             };
             
@@ -1943,8 +1947,29 @@ class CustomerManager {
             
             console.log('Loading script:', script.src);
             
-            // Add script to trigger the request
-            document.head.appendChild(script);
+            // First, let's test with a simple test action
+            const testCallbackName = 'testCallback_' + Date.now();
+            const testScript = document.createElement('script');
+            testScript.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?action=test&callback=${testCallbackName}`;
+            
+            window[testCallbackName] = (testData) => {
+                console.log('Google Apps Script test response:', testData);
+                document.head.removeChild(testScript);
+                delete window[testCallbackName];
+                
+                // Now load the actual data
+                document.head.appendChild(script);
+            };
+            
+            testScript.onerror = () => {
+                console.error('Google Apps Script test failed - proceeding with main request anyway');
+                document.head.removeChild(testScript);
+                delete window[testCallbackName];
+                document.head.appendChild(script);
+            };
+            
+            console.log('Testing Google Apps Script first...');
+            document.head.appendChild(testScript);
             
             // Set timeout
             setTimeout(() => {

@@ -877,21 +877,13 @@ class CustomerManager {
                 if (field.tagName === 'SELECT') {
                     // Handle select fields specially
                     if (key === 'serviceType') {
-                        // For service type, try to find the exact match first
-                        let valueToSet = customer[key] || '';
+                        // For service type, set the value directly since values should match
+                        field.value = customer[key] || '';
                         
-                        // If the stored value doesn't match any option, try to find by label
-                        const option = Array.from(field.options).find(opt => 
-                            opt.value === valueToSet || 
-                            opt.textContent === valueToSet ||
-                            this.getServiceTypeLabel(opt.value) === valueToSet
-                        );
-                        
-                        if (option) {
-                            field.value = option.value;
-                        } else {
-                            console.warn('Could not find matching service type option for:', valueToSet);
-                            field.value = '';
+                        // If the value doesn't exist in options, log a warning
+                        const validOption = Array.from(field.options).find(opt => opt.value === field.value);
+                        if (!validOption && field.value) {
+                            console.warn('Service type value not found in options:', field.value, 'Available options:', Array.from(field.options).map(opt => opt.value));
                         }
                     } else {
                         field.value = customer[key] || '';

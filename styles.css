@@ -536,12 +536,118 @@ header p {
     min-width: auto;
 }
 
-/* Color Legend */
-.color-legend {
+/* Collapsible Legend Styles */
+.legend-section {
+    margin-bottom: 15px;
+}
+
+.legend-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.legend-header:hover {
+    background: #f1f5f9;
+}
+
+.legend-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-toggle-btn {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
     font-size: 0.8rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.legend-toggle-btn:hover {
+    background: #475569;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+}
+
+.legend-toggle-btn:active {
+    transform: translateY(0);
+}
+
+.legend-content {
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-height: 500px;
+    opacity: 1;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 16px;
+}
+
+.legend-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border: none;
+}
+
+/* Dark theme legend header */
+body.dark-theme .legend-header {
+    background: rgba(55, 65, 81, 0.5);
+    border-color: #4b5563;
+}
+
+body.dark-theme .legend-header:hover {
+    background: rgba(75, 85, 99, 0.5);
+}
+
+body.dark-theme .legend-header h3 {
+    color: #e5e7eb;
+}
+
+body.dark-theme .legend-content {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: #4b5563;
+}
+
+.legend-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-section h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+body.dark-theme .legend-section h4 {
+    color: #cbd5e0;
 }
 
 .legend-item {
@@ -557,18 +663,42 @@ header p {
 }
 
 .legend-color-bar.priority-low {
-    background: #10b981; /* Green */
-}
-
-.legend-color-bar.priority-medium {
     background: #3b82f6; /* Blue */
 }
 
+.legend-color-bar.priority-medium {
+    background: #f59e0b; /* Yellow/Orange */
+}
+
 .legend-color-bar.priority-high {
-    background: #f59e0b; /* Orange */
+    background: #ef4444; /* Red */
 }
 
 .legend-color-bar.priority-emergency {
+    background: #dc2626; /* Darker red */
+}
+
+.legend-color-bar.status-initial {
+    background: #6b7280; /* Gray */
+}
+
+.legend-color-bar.status-quoted {
+    background: #3b82f6; /* Blue */
+}
+
+.legend-color-bar.status-scheduled {
+    background: #f59e0b; /* Orange */
+}
+
+.legend-color-bar.status-in-progress {
+    background: #8b5cf6; /* Purple */
+}
+
+.legend-color-bar.status-completed {
+    background: #10b981; /* Green */
+}
+
+.legend-color-bar.status-follow-up {
     background: #ef4444; /* Red */
 }
 
@@ -1059,6 +1189,17 @@ body.dark-theme .legend-item span {
     }
 }
 
+@keyframes pulse-emergency-strong {
+    0%, 100% { 
+        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.5);
+        transform: scale(1.0);
+    }
+    50% { 
+        box-shadow: 0 12px 35px rgba(220, 38, 38, 0.8);
+        transform: scale(1.03);
+    }
+}
+
 /* Modal Styles */
 .modal {
     display: none;
@@ -1498,91 +1639,193 @@ body.dark-theme .customer-card:hover {
 }
 
 /* Customer Card Color Coding - Light Theme */
-/* Priority-based left border colors */
-.customer-card[data-priority="low"] {
-    border-left: 4px solid #10b981; /* Green */
+/* Default grey background for non-contacted customers */
+.customer-card {
+    background: rgba(156, 163, 175, 0.1); /* Light grey background */
 }
 
-.customer-card[data-priority="medium"] {
-    border-left: 4px solid #3b82f6; /* Blue */
+/* Priority banner for non-contacted customers */
+.customer-card:not(.contacted)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px; /* Perfect height to cover name and phone number */
+    z-index: 0;
+    opacity: 0.1;
 }
 
-.customer-card[data-priority="high"] {
-    border-left: 4px solid #f59e0b; /* Orange */
+.customer-card:not(.contacted)[data-priority="low"]::before {
+    background-color: #3b82f6; /* Blue banner for low priority */
 }
 
-.customer-card[data-priority="emergency"] {
-    border-left: 4px solid #ef4444; /* Red */
-    background: rgba(239, 68, 68, 0.05);
+.customer-card:not(.contacted)[data-priority="medium"]::before {
+    background-color: #f59e0b; /* Yellow/Orange banner for medium priority */
 }
 
-/* Status-based background tints - More visible in light theme */
+.customer-card:not(.contacted)[data-priority="high"]::before {
+    background-color: #ef4444; /* Red banner for high priority */
+}
+
+.customer-card:not(.contacted)[data-priority="emergency"]::before {
+    background-color: #dc2626; /* Darker red banner for emergency with prominent pulse */
+    opacity: 0.2; /* More opaque than other banners */
+    animation: pulse-emergency-strong 1.5s infinite;
+}
+
+/* Make sure card content is above the banner */
+.customer-card {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure text content appears above banners */
+.customer-card .customer-name,
+.customer-card .customer-phone,
+.customer-card .customer-service,
+.customer-card .priority-badge,
+.customer-card .contacted-indicator {
+    position: relative;
+    z-index: 2;
+}
+
+/* Priority-based background colors for contacted customers */
+.customer-card.contacted[data-priority="low"] {
+    background: rgba(59, 130, 246, 0.1); /* Light blue background */
+}
+
+.customer-card.contacted[data-priority="medium"] {
+    background: rgba(245, 158, 11, 0.1); /* Light orange background */
+}
+
+.customer-card.contacted[data-priority="high"] {
+    background: rgba(239, 68, 68, 0.15); /* Light red background */
+}
+
+.customer-card.contacted[data-priority="emergency"] {
+    background: rgba(220, 38, 38, 0.2); /* Light dark red background with stronger tint */
+}
+
+/* Status-based left border colors */
 .customer-card[data-status="initial"] {
-    background: rgba(156, 163, 175, 0.15); /* Gray tint */
+    border-left: 4px solid #6b7280; /* Gray border */
 }
 
 .customer-card[data-status="quoted"] {
-    background: rgba(59, 130, 246, 0.15); /* Blue tint */
+    border-left: 4px solid #3b82f6; /* Blue border */
 }
 
 .customer-card[data-status="scheduled"] {
-    background: rgba(245, 158, 11, 0.15); /* Orange tint */
+    border-left: 4px solid #f59e0b; /* Orange border */
 }
 
 .customer-card[data-status="in-progress"] {
-    background: rgba(139, 92, 246, 0.15); /* Purple tint */
+    border-left: 4px solid #8b5cf6; /* Purple border */
 }
 
 .customer-card[data-status="completed"] {
-    background: rgba(16, 185, 129, 0.15); /* Green tint */
+    border-left: 4px solid #10b981; /* Green border */
 }
 
 .customer-card[data-status="follow-up"] {
-    background: rgba(239, 68, 68, 0.15); /* Red tint */
+    border-left: 4px solid #ef4444; /* Red border */
 }
 
 /* Dark Theme Customer Card Color Coding */
-/* Priority-based left border colors (same as light) */
-body.dark-theme .customer-card[data-priority="low"] {
-    border-left: 4px solid #10b981;
+/* Default grey background for non-contacted customers */
+body.dark-theme .customer-card {
+    background: rgba(75, 85, 99, 0.2); /* Dark grey background */
 }
 
-body.dark-theme .customer-card[data-priority="medium"] {
-    border-left: 4px solid #3b82f6;
+/* Priority banner for non-contacted customers - Dark theme */
+body.dark-theme .customer-card:not(.contacted)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px; /* Perfect height to cover name and phone number */
+    z-index: 0;
+    opacity: 0.15;
 }
 
-body.dark-theme .customer-card[data-priority="high"] {
-    border-left: 4px solid #f59e0b;
+body.dark-theme .customer-card:not(.contacted)[data-priority="low"]::before {
+    background-color: #3b82f6; /* Blue banner for low priority */
 }
 
-body.dark-theme .customer-card[data-priority="emergency"] {
-    border-left: 4px solid #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+body.dark-theme .customer-card:not(.contacted)[data-priority="medium"]::before {
+    background-color: #f59e0b; /* Yellow/Orange banner for medium priority */
 }
 
-/* Status-based background tints for dark theme - More visible */
+body.dark-theme .customer-card:not(.contacted)[data-priority="high"]::before {
+    background-color: #ef4444; /* Red banner for high priority */
+}
+
+body.dark-theme .customer-card:not(.contacted)[data-priority="emergency"]::before {
+    background-color: #dc2626; /* Darker red banner for emergency with prominent pulse */
+    opacity: 0.25; /* More opaque than other banners in dark theme */
+    animation: pulse-emergency-strong 1.5s infinite;
+}
+
+/* Make sure card content is above the banner - Dark theme */
+body.dark-theme .customer-card {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure text content appears above banners - Dark theme */
+body.dark-theme .customer-card .customer-name,
+body.dark-theme .customer-card .customer-phone,
+body.dark-theme .customer-card .customer-service,
+body.dark-theme .customer-card .priority-badge,
+body.dark-theme .customer-card .contacted-indicator {
+    position: relative;
+    z-index: 2;
+}
+
+/* Priority-based background colors for contacted customers */
+body.dark-theme .customer-card.contacted[data-priority="low"] {
+    background: rgba(59, 130, 246, 0.15); /* Light blue background */
+}
+
+body.dark-theme .customer-card.contacted[data-priority="medium"] {
+    background: rgba(245, 158, 11, 0.15); /* Light orange background */
+}
+
+body.dark-theme .customer-card.contacted[data-priority="high"] {
+    background: rgba(239, 68, 68, 0.2); /* Light red background */
+}
+
+body.dark-theme .customer-card.contacted[data-priority="emergency"] {
+    background: rgba(220, 38, 38, 0.25); /* Light dark red background with stronger tint */
+}
+
+/* Status-based left border colors for dark theme */
 body.dark-theme .customer-card[data-status="initial"] {
-    background: rgba(75, 85, 99, 0.4); /* Gray tint */
+    border-left: 4px solid #6b7280; /* Gray border */
 }
 
 body.dark-theme .customer-card[data-status="quoted"] {
-    background: rgba(59, 130, 246, 0.2); /* Blue tint */
+    border-left: 4px solid #3b82f6; /* Blue border */
 }
 
 body.dark-theme .customer-card[data-status="scheduled"] {
-    background: rgba(245, 158, 11, 0.2); /* Orange tint */
+    border-left: 4px solid #f59e0b; /* Orange border */
 }
 
 body.dark-theme .customer-card[data-status="in-progress"] {
-    background: rgba(139, 92, 246, 0.2); /* Purple tint */
+    border-left: 4px solid #8b5cf6; /* Purple border */
 }
 
 body.dark-theme .customer-card[data-status="completed"] {
-    background: rgba(16, 185, 129, 0.2); /* Green tint */
+    border-left: 4px solid #10b981; /* Green border */
 }
 
-body.dark-theme .customer-card[data-status="follow-up"] {
-    background: rgba(239, 68, 68, 0.2); /* Red tint */
+body.dark-theme .customer-card[data-status="completed"] {
+    background: rgba(16, 185, 129, 0.3) !important; /* Stronger green background for dark theme */
+    border-left: 6px solid #10b981 !important; /* Thicker green border */
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 /* Dark theme - Customer notes (italic text) */
@@ -1769,14 +2012,10 @@ body.dark-theme textarea:focus {
     to { transform: rotate(360deg); }
 }
 
-/* Contacted Customer Status */
-.customer-card.contacted {
-    background: rgba(16, 185, 129, 0.1); /* Light green tint */
-    border-left: 4px solid #10b981; /* Green left border */
-}
+/* Contacted Customer Status - Badge Only */
 
 .contacted-indicator {
-    background: #10b981;
+    background: #06b6d4; /* Cyan background */
     color: white;
     padding: 2px 5px;
     border-radius: 8px;
@@ -1795,6 +2034,18 @@ body.dark-theme textarea:focus {
     gap: 4px;
     flex-shrink: 0;
     margin-top: 2px;
+}
+
+/* Hide badges for completed customers */
+.customer-card[data-status="completed"] .customer-badge-row {
+    display: none;
+}
+
+/* Special styling for completed customers - prominent green */
+.customer-card[data-status="completed"] {
+    background: rgba(16, 185, 129, 0.25) !important; /* Stronger green background */
+    border-left: 6px solid #10b981 !important; /* Thicker green border */
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 .contacted-indicator i {
@@ -1829,14 +2080,10 @@ body.dark-theme textarea:focus {
     box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
-/* Dark theme - Contacted status */
-body.dark-theme .customer-card.contacted {
-    background: rgba(16, 185, 129, 0.15);
-    border-left: 4px solid #10b981;
-}
+/* Dark theme - Contacted status - Badge Only */
 
 body.dark-theme .contacted-indicator {
-    background: #10b981;
+    background: #06b6d4;
     color: #1a202c;
 }
 

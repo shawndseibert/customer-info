@@ -167,8 +167,27 @@ class CustomerManager {
             this.toggleFormSection();
         });
 
+        // Legend toggle functionality
+        safeAddEventListener('toggleLegend', 'click', () => {
+            this.toggleLegendSection();
+        });
+
+        // Make legend header clickable
+        const legendHeader = document.querySelector('.legend-header');
+        if (legendHeader) {
+            legendHeader.addEventListener('click', (e) => {
+                // Don't toggle if clicking the button itself
+                if (!e.target.closest('.legend-toggle-btn')) {
+                    this.toggleLegendSection();
+                }
+            });
+        }
+
         // Initialize form as collapsed by default
         this.initializeFormCollapse();
+
+        // Initialize legend as collapsed by default
+        this.initializeLegendCollapse();
     }
 
     // Bind stat card click events for filtering
@@ -537,18 +556,34 @@ class CustomerManager {
     updateCustomerStatus(customerId, newStatus) {
         const customerIndex = this.customers.findIndex(c => c.id === customerId);
         if (customerIndex !== -1) {
-            this.customers[customerIndex].status = newStatus;
-            this.customers[customerIndex].updatedAt = new Date().toISOString();
+            const customer = this.customers[customerIndex];
+            const oldStatus = customer.status;
+
+            // Handle special logic for completed status
+            if (newStatus === 'completed') {
+                // Store original priority before changing to low
+                if (!customer.originalPriority) {
+                    customer.originalPriority = customer.priority || 'medium';
+                }
+                customer.priority = 'low';
+            } else if (oldStatus === 'completed' && newStatus !== 'completed') {
+                // Restore original priority when changing away from completed
+                if (customer.originalPriority) {
+                    customer.priority = customer.originalPriority;
+                    delete customer.originalPriority;
+                }
+            }
+
+            customer.status = newStatus;
+            customer.updatedAt = new Date().toISOString();
             this.saveCustomers();
             // Note: renderCustomers() and updateStats() are now called by saveCustomers()
             this.showNotification(`Status updated to "${this.getStatusLabel(newStatus)}"`, 'success');
-            
-            // Sync status update to Google Sheets
-            this.updateCustomerInGoogleSheets(this.customers[customerIndex]);
-        }
-    }
 
-    quickEdit(customerId) {
+            // Sync status update to Google Sheets
+            this.updateCustomerInGoogleSheets(customer);
+        }
+    }    quickEdit(customerId) {
         this.currentEditingId = customerId;
         const customer = this.customers.find(c => c.id === customerId);
         if (customer) {
@@ -750,7 +785,14 @@ class CustomerManager {
 
             return matchesSearch && matchesStatus && matchesPriority;
         }).sort((a, b) => {
-            // Sort by priority first, then by creation date
+            // Handle completed customers - they should appear below all active customers
+            const aCompleted = a.status === 'completed';
+            const bCompleted = b.status === 'completed';
+            
+            if (aCompleted && !bCompleted) return 1; // a (completed) comes after b (active)
+            if (!aCompleted && bCompleted) return -1; // a (active) comes before b (completed)
+            
+            // Both are either completed or active - sort by priority, then by creation date
             const priorityOrder = { emergency: 4, high: 3, medium: 2, low: 1 };
             const aPriority = priorityOrder[a.priority] || 2;
             const bPriority = priorityOrder[b.priority] || 2;
@@ -2562,6 +2604,24 @@ class CustomerManager {
         this.updatePanelHeights();
     }
 
+    toggleLegendSection() {
+        const legendContent = document.querySelector('.legend-content');
+        const toggleBtn = document.getElementById('toggleLegend');
+        const chevronIcon = toggleBtn.querySelector('i');
+
+        if (legendContent.classList.contains('collapsed')) {
+            // Expand the legend
+            legendContent.classList.remove('collapsed');
+            chevronIcon.className = 'fas fa-chevron-up';
+            toggleBtn.title = 'Hide legend';
+        } else {
+            // Collapse the legend
+            legendContent.classList.add('collapsed');
+            chevronIcon.className = 'fas fa-chevron-down';
+            toggleBtn.title = 'Show legend';
+        }
+    }
+
     // Initialize form as collapsed by default
     initializeFormCollapse() {
         const formContent = document.querySelector('.form-content');
@@ -2570,6 +2630,11 @@ class CustomerManager {
         const recordsSection = document.querySelector('.records-section');
 
         if (formContent && toggleBtn && formSection && recordsSection) {
+            // Set a default height first to prevent collapsed view on hard refresh
+            // This approximates the height needed for 4 customer cards + 5th card banner
+            const defaultHeight = 600; // Reasonable default height
+            recordsSection.style.height = defaultHeight + 'px';
+
             // Temporarily expand the form to measure its natural height
             formContent.classList.remove('collapsed');
 
@@ -2587,7 +2652,14 @@ class CustomerManager {
                         chevronIcon.className = 'fas fa-chevron-down';
                     }
                     toggleBtn.title = 'Show form';
-                }, 200); // Increased timeout for safety
+
+                    // Fallback: If height is too small (indicating measurement failed), use default
+                    if (this.expandedFormHeight < 200) { // Minimum expected height
+                        console.warn('Form height measurement failed, using default height');
+                        this.expandedFormHeight = defaultHeight;
+                        recordsSection.style.height = this.expandedFormHeight + 'px';
+                    }
+                }, 300); // Increased timeout for hard refresh scenarios
             });
         }
     }
@@ -2613,6 +2685,22 @@ class CustomerManager {
                     }
                 }, 350);
             }
+        }
+    }
+
+    // Initialize legend as collapsed by default
+    initializeLegendCollapse() {
+        const legendContent = document.querySelector('.legend-content');
+        const toggleBtn = document.getElementById('toggleLegend');
+
+        if (legendContent && toggleBtn) {
+            // Start with legend collapsed
+            legendContent.classList.add('collapsed');
+            const chevronIcon = toggleBtn.querySelector('i');
+            if (chevronIcon) {
+                chevronIcon.className = 'fas fa-chevron-down';
+            }
+            toggleBtn.title = 'Show legend';
         }
     }
 }

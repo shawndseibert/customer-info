@@ -203,26 +203,69 @@
                                 <i class="fas fa-download"></i> Export
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Legend Section -->
+                <div class="legend-section">
+                    <div class="legend-header">
+                        <h3><i class="fas fa-info-circle"></i> Color Legend</h3>
+                        <button id="toggleLegend" class="legend-toggle-btn" title="Toggle legend visibility">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                    <div class="legend-content">
                         <div class="color-legend">
-                            <div class="legend-item">
-                                <div class="legend-color-bar priority-low"></div>
-                                <span>Low Priority</span>
+                            <div class="legend-section">
+                                <h4>Priority (Non-Contacted)</h4>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar priority-low"></div>
+                                    <span>Low Priority</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar priority-medium"></div>
+                                    <span>Medium Priority</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar priority-high"></div>
+                                    <span>High Priority</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar priority-emergency"></div>
+                                    <span>Emergency</span>
+                                </div>
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-color-bar priority-medium"></div>
-                                <span>Medium Priority</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color-bar priority-high"></div>
-                                <span>High Priority</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color-bar priority-emergency"></div>
-                                <span>Emergency</span>
+                            <div class="legend-section">
+                                <h4>Status (Left Border)</h4>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-initial"></div>
+                                    <span>Initial</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-quoted"></div>
+                                    <span>Quoted</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-scheduled"></div>
+                                    <span>Scheduled</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-in-progress"></div>
+                                    <span>In Progress</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-completed"></div>
+                                    <span>Completed</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color-bar status-follow-up"></div>
+                                    <span>Follow-up</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="records-controls">
                     <div class="search-filter-row">
                         <div class="search-container">
@@ -480,6 +523,20 @@
         // Allow Enter key to submit password
         document.getElementById('adminPassword').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Auto-login when correct PIN/password is entered
+        document.getElementById('adminPassword').addEventListener('input', (e) => {
+            const inputValue = e.target.value;
+            const isTrustedDevice = localStorage.getItem('trustedDevice') === 'true';
+            
+            if (isTrustedDevice && inputValue.length === 4 && /^\d{4}$/.test(inputValue)) {
+                // Auto-submit when 4-digit PIN is complete
+                checkPassword();
+            } else if (!isTrustedDevice && inputValue === ADMIN_PASSWORD) {
+                // Auto-submit when full password is entered correctly
                 checkPassword();
             }
         });

@@ -90,7 +90,7 @@ function doGet(e) {
         };
       } else {
           // Convert to your expected format (matching YOUR exact column order)
-          // Your Columns: A=ID, B=First, C=Last, D=Phone, E=Email, F=Address, G=City, H=State, I=Zip, J=Service, K=Status, L=Priority, M=Notes, N=Date Added, O=Budget, P=Preferred Date, Q=Product Details
+          // Your Columns: A=ID, B=First, C=Last, D=Phone, E=Email, F=Address, G=City, H=State, I=Zip, J=Service, K=Status, L=Priority, M=Notes, N=Date Added, O=Budget, P=Preferred Date, Q=Product Details, R=Contacted, S=Contacted Date
           const customers = data.slice(1).map((row, index) => {
             try {
               // Handle product details and notes separation
@@ -128,8 +128,10 @@ function doGet(e) {
                 dateAdded: row[13] || '',   // Column N: Date Added
                 budget: row[14] || '',      // Column O: Budget
                 preferredDate: row[15] || '', // Column P: Preferred Date
+                productDetails: productDetails, // Column Q: Product Details
+                contacted: row[17] === 'true' || row[17] === true, // Column R: Contacted (convert to boolean)
+                contactedDate: row[18] || null, // Column S: Contacted Date
                 // Additional fields for form compatibility
-                productDetails: productDetails, // Extract just the description for product details
                 meetingDate: '',            // Default empty
                 referralSource: '',         // Default empty
                 createdAt: row[13] || new Date().toISOString(), // Use dateAdded as createdAt
@@ -186,7 +188,9 @@ function doGet(e) {
             e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
             e.parameter.budget || '',                                // Column O: Budget
             e.parameter.preferredDate || '',                         // Column P: Preferred Date
-            e.parameter.productDetails || ''                         // Column Q: Product Details
+            e.parameter.productDetails || '',                        // Column Q: Product Details
+            e.parameter.contacted || 'false',                        // Column R: Contacted
+            e.parameter.contactedDate || ''                          // Column S: Contacted Date
           ];
           
           // Update the row (customerRowIndex + 1 because getRange is 1-based)
@@ -226,7 +230,7 @@ function doGet(e) {
           };
         } else {
           // Get customer data from parameters (matching YOUR exact header order)
-          // Your Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date, Product Details
+          // Your Headers: ID, First, Last, Phone, Email, Address, City, State, Zip, Service, Status, Priority, Notes, Date Added, Budget, Preferred Date, Product Details, Contacted, Contacted Date
           const customerData = [
             customerId || '',                                        // Column A: ID
             e.parameter.firstName || '',                             // Column B: First  
@@ -244,7 +248,9 @@ function doGet(e) {
             e.parameter.dateAdded || new Date().toISOString(),       // Column N: Date Added
             e.parameter.budget || '',                                // Column O: Budget
             e.parameter.preferredDate || '',                         // Column P: Preferred Date
-            e.parameter.productDetails || ''                         // Column Q: Product Details
+            e.parameter.productDetails || '',                        // Column Q: Product Details
+            e.parameter.contacted || 'false',                        // Column R: Contacted
+            e.parameter.contactedDate || ''                          // Column S: Contacted Date
           ];
           
           // Add the new row to the sheet
@@ -273,7 +279,8 @@ function doGet(e) {
         const headers = [
           'ID', 'First', 'Last', 'Phone', 'Email', 
           'Address', 'City', 'State', 'Zip', 'Service', 
-          'Status', 'Priority', 'Notes', 'Date Added', 'Budget', 'Preferred Date', 'Product Details'
+          'Status', 'Priority', 'Notes', 'Date Added', 'Budget', 'Preferred Date', 'Product Details',
+          'Contacted', 'Contacted Date'
         ];
         
         // Clear first row and set headers

@@ -1617,7 +1617,9 @@ class CustomerManager {
                 dateAdded: customerData.dateAdded || new Date().toISOString(),
                 budget: customerData.budget || '',
                 preferredDate: customerData.preferredDate || '',
-                productDetails: customerData.productDetails || ''
+                productDetails: customerData.productDetails || '',
+                contacted: customerData.contacted ? 'true' : 'false',
+                contactedDate: customerData.contactedDate || ''
             });
             
             script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;
@@ -1686,7 +1688,9 @@ class CustomerManager {
                 dateAdded: customerData.dateAdded || new Date().toISOString(),
                 budget: customerData.budget || '',
                 preferredDate: customerData.preferredDate || '',
-                productDetails: customerData.productDetails || ''
+                productDetails: customerData.productDetails || '',
+                contacted: customerData.contacted ? 'true' : 'false',
+                contactedDate: customerData.contactedDate || ''
             });
             
             script.src = `https://script.google.com/macros/s/AKfycbxk1iwNaSb0Wlu5f5qFJlXT0OeiQgoe6lzerkpJaHkjF9VDUqgabz2ZZny4B2pAUjvxUg/exec?${params.toString()}`;
@@ -1797,6 +1801,8 @@ class CustomerManager {
             referralSource: sheetRow.heardAbout || sheetRow.referralSource || '',
             createdAt: sheetRow.timestamp || sheetRow.dateAdded || new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            contacted: sheetRow.contacted === 'true' || sheetRow.contacted === true,
+            contactedDate: sheetRow.contactedDate || null,
             source: 'Google Sheets Import'
         };
     }

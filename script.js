@@ -78,6 +78,13 @@ class CustomerManager {
             }
         });
 
+        // Remove all leads
+        safeAddEventListener('removeAllLeads', 'click', () => {
+            if (confirm('⚠️ WARNING: This will permanently delete ALL customer records from local storage!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
+                this.removeAllLeads();
+            }
+        });
+
         // Generate test customer
         const testCustomerIcon = document.getElementById('generateTestCustomer');
         if (testCustomerIcon) {
@@ -1058,6 +1065,30 @@ class CustomerManager {
         
         // If both are same type, prefer the shorter one (more recent alphanumeric IDs are typically shorter)
         return id1.length <= id2.length ? id1 : id2;
+    }
+
+    // Remove all customer leads
+    removeAllLeads() {
+        console.log('Removing all customer leads from local storage...');
+        const originalCount = this.customers.length;
+        
+        // Clear the customers array
+        this.customers = [];
+        
+        // Clear both localStorage keys
+        localStorage.removeItem('customerSubmissions');
+        localStorage.removeItem('customers');
+        
+        // Save the empty state and update display
+        this.saveCustomers();
+        
+        // Show success notification
+        this.showNotification(
+            `Successfully removed all ${originalCount} customer records. You can now import fresh data from Google Sheets.`,
+            'success'
+        );
+        
+        console.log(`Removed ${originalCount} customer records from local storage`);
     }
 
     // Data Export

@@ -1400,15 +1400,58 @@ class CustomerManager {
     }
 
     getBudgetLabel(value) {
+        // Handle both code values and display labels
         const labels = {
+            // Code values
             'under-500': 'Under $500',
             '500-1000': '$500 - $1,000',
             '1000-2500': '$1,000 - $2,500',
             '2500-5000': '$2,500 - $5,000',
             '5000-10000': '$5,000 - $10,000',
-            'over-10000': 'Over $10,000'
+            'over-10000': 'Over $10,000',
+            // Display labels (in case Google Sheets has these)
+            'under $500': 'Under $500',
+            '$500 - $1,000': '$500 - $1,000',
+            '$1,000 - $2,500': '$1,000 - $2,500',
+            '$2,500 - $5,000': '$2,500 - $5,000',
+            '$5,000 - $10,000': '$5,000 - $10,000',
+            'over $10,000': 'Over $10,000'
         };
-        return labels[value] || 'Not specified';
+        
+        // Handle empty/null values
+        if (!value || value === '') {
+            return 'Not specified';
+        }
+        
+        // Clean up the value for matching
+        const cleanValue = value.toString().toLowerCase().trim();
+        
+        // Try to match the cleaned value
+        for (const [key, label] of Object.entries(labels)) {
+            if (key.toLowerCase().replace(/[$]/g, '').replace(/\s+/g, ' ') === cleanValue.replace(/[$]/g, '').replace(/\s+/g, ' ')) {
+                return label;
+            }
+        }
+        
+        // Try direct match with original value
+        const result = labels[value] || labels[value.trim()];
+        if (result) {
+            return result;
+        }
+        
+        // If it's a number, try to categorize it
+        const numValue = parseFloat(value.replace(/[$,]/g, ''));
+        if (!isNaN(numValue)) {
+            if (numValue < 500) return 'Under $500';
+            if (numValue < 1000) return '$500 - $1,000';
+            if (numValue < 2500) return '$1,000 - $2,500';
+            if (numValue < 5000) return '$2,500 - $5,000';
+            if (numValue < 10000) return '$5,000 - $10,000';
+            return 'Over $10,000';
+        }
+        
+        // If no match found, return the original value or 'Not specified'
+        return value || 'Not specified';
     }
 
     getReferralLabel(value) {

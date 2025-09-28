@@ -191,7 +191,12 @@
             <section class="records-section">
                 <div class="records-header">
                     <div class="records-title-section">
-                        <h2><i class="fas fa-users"></i> Customer Records</h2>
+                        <div class="records-title-row">
+                            <h2><i class="fas fa-users"></i> Customer Records</h2>
+                            <button id="exportData" class="btn btn-export">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
                         <div class="color-legend">
                             <div class="legend-item">
                                 <div class="legend-color-bar priority-low"></div>
@@ -211,7 +216,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="records-controls">
+                </div>
+                <div class="records-controls">
+                    <div class="search-filter-row">
                         <div class="search-container">
                             <input type="text" id="searchInput" placeholder="Search customers..." class="search-input">
                             <i class="fas fa-search search-icon"></i>
@@ -234,9 +241,8 @@
                                 <option value="low">Low</option>
                             </select>
                         </div>
-                        <button id="exportData" class="btn btn-export">
-                            <i class="fas fa-download"></i> Export
-                        </button>
+                    </div>
+                    <div class="action-buttons">
                         <button id="importSubmissions" class="btn btn-import">
                             <i class="fas fa-upload"></i> Import QR Leads
                         </button>

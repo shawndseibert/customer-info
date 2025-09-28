@@ -465,20 +465,24 @@ header p {
 }
 
 .records-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
 }
 
-.records-title-section h2 {
-    color: #4a5568;
-    font-size: 1.8rem;
-    border-bottom: 3px solid #667eea;
-    padding-bottom: 10px;
+.records-title-section {
+    margin-bottom: 15px;
+}
+
+.records-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 10px;
+}
+
+.records-title-row .btn-export {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    min-width: auto;
 }
 
 /* Color Legend */
@@ -524,9 +528,21 @@ body.dark-theme .legend-item span {
 
 .records-controls {
     display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-filter-row {
+    display: flex;
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
 }
 
 .search-container {

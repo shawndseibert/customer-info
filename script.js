@@ -574,6 +574,7 @@ class CustomerManager {
                 this.saveCustomers();
                 this.renderCustomers();
                 this.updateStats();
+                this.updateCustomerInGoogleSheets(customer);
                 this.showNotification(`${customer.firstName} ${customer.lastName} contact status removed`, 'info');
                 
             } else {
@@ -594,6 +595,7 @@ class CustomerManager {
                 this.saveCustomers();
                 this.renderCustomers();
                 this.updateStats();
+                this.updateCustomerInGoogleSheets(customer);
                 this.showNotification(`${customer.firstName} ${customer.lastName} marked as contacted`, 'success');
             }
         }

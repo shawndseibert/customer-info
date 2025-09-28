@@ -233,6 +233,58 @@ header p {
     margin-right: 20px;
 }
 
+/* Collapsible Form Styles */
+.form-toggle-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.form-toggle-btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.form-toggle-btn:active {
+    transform: translateY(0);
+}
+
+.form-toggle-btn.collapsed .fa-chevron-up {
+    display: none;
+}
+
+.form-toggle-btn.expanded .fa-chevron-down {
+    display: none;
+}
+
+.form-content {
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-height: 2000px;
+    opacity: 1;
+}
+
+.form-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 /* Test Customer Icon - Make it clearly clickable */
 .test-customer-icon {
     cursor: pointer !important;
@@ -459,7 +511,6 @@ header p {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     min-width: 0; /* Allows grid item to shrink below its content size */
-    overflow: hidden; /* Prevent any overflow from child elements */
     display: flex;
     flex-direction: column;
 }

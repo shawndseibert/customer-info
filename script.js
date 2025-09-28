@@ -3,6 +3,7 @@ class CustomerManager {
     constructor() {
         this.customers = this.loadCustomers();
         this.currentEditingId = null;
+        this.expandedFormHeight = null; // Store the expanded form height
         this.init();
     }
 
@@ -142,12 +143,15 @@ class CustomerManager {
         }
 
         // Auto-save form data on input changes
-        const formInputs = document.querySelectorAll('#customerForm input, #customerForm select, #customerForm textarea');
-        formInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                this.autoSaveFormData();
+        const form = document.getElementById('customerForm');
+        if (form) {
+            const formInputs = form.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    this.autoSaveFormData();
+                });
             });
-        });
+        }
 
         // Load auto-saved data on page load
         this.loadAutoSavedData();
@@ -157,6 +161,14 @@ class CustomerManager {
 
         // Initialize theme toggle
         this.initializeThemeIntegration();
+
+        // Form toggle functionality
+        safeAddEventListener('toggleForm', 'click', () => {
+            this.toggleFormSection();
+        });
+
+        // Initialize form as collapsed by default
+        this.initializeFormCollapse();
     }
 
     // Bind stat card click events for filtering
@@ -296,6 +308,11 @@ class CustomerManager {
     // Form Validation
     setupFormValidation() {
         const form = document.getElementById('customerForm');
+        if (!form) {
+            console.warn('Customer form not found, skipping validation setup');
+            return;
+        }
+        
         const inputs = form.querySelectorAll('input[required], select[required]');
 
         inputs.forEach(input => {
@@ -404,10 +421,13 @@ class CustomerManager {
 
     // Form Handling
     handleFormSubmit() {
-        const formData = this.getFormData();
-        
-        // Validate all required fields
         const form = document.getElementById('customerForm');
+        if (!form) {
+            console.error('Customer form not found');
+            return;
+        }
+        
+        const formData = this.getFormData();
         const requiredFields = form.querySelectorAll('input[required], select[required]');
         let isFormValid = true;
 
@@ -443,6 +463,10 @@ class CustomerManager {
 
     getFormData() {
         const form = document.getElementById('customerForm');
+        if (!form) {
+            console.warn('Customer form not found, cannot get form data');
+            return {};
+        }
         const formData = new FormData(form);
         const data = {};
 
@@ -844,6 +868,9 @@ class CustomerManager {
         `;
 
         modal.style.display = 'block';
+        
+        // Prevent body scrolling when modal is open
+        document.body.style.overflow = 'hidden';
     }
 
     editCustomer() {
@@ -863,6 +890,10 @@ class CustomerManager {
 
     closeModal(clearEditingId = true) {
         document.getElementById('customerModal').style.display = 'none';
+        
+        // Restore body scrolling when modal is closed
+        document.body.style.overflow = '';
+        
         if (clearEditingId) {
             this.currentEditingId = null;
         }
@@ -871,6 +902,10 @@ class CustomerManager {
     // Form Management
     populateForm(customer) {
         const form = document.getElementById('customerForm');
+        if (!form) {
+            console.warn('Customer form not found, cannot populate form');
+            return;
+        }
         Object.keys(customer).forEach(key => {
             const field = form.querySelector(`[name="${key}"]`);
             if (field) {
@@ -904,7 +939,10 @@ class CustomerManager {
     }
 
     clearForm() {
-        document.getElementById('customerForm').reset();
+        const form = document.getElementById('customerForm');
+        if (form) {
+            form.reset();
+        }
         this.currentEditingId = null;
         
         // Reset form title
@@ -2500,6 +2538,82 @@ class CustomerManager {
             info: '#3182ce'
         };
         return colors[type] || colors.info;
+    }
+
+    // Form toggle functionality
+    toggleFormSection() {
+        const formContent = document.querySelector('.form-content');
+        const toggleBtn = document.getElementById('toggleForm');
+        const chevronIcon = toggleBtn.querySelector('i');
+
+        if (formContent.classList.contains('collapsed')) {
+            // Expand the form
+            formContent.classList.remove('collapsed');
+            chevronIcon.className = 'fas fa-chevron-up';
+            toggleBtn.title = 'Hide form';
+        } else {
+            // Collapse the form
+            formContent.classList.add('collapsed');
+            chevronIcon.className = 'fas fa-chevron-down';
+            toggleBtn.title = 'Show form';
+        }
+
+        // Update panel heights after toggle
+        this.updatePanelHeights();
+    }
+
+    // Initialize form as collapsed by default
+    initializeFormCollapse() {
+        const formContent = document.querySelector('.form-content');
+        const toggleBtn = document.getElementById('toggleForm');
+        const formSection = document.querySelector('.form-section');
+        const recordsSection = document.querySelector('.records-section');
+
+        if (formContent && toggleBtn && formSection && recordsSection) {
+            // Temporarily expand the form to measure its natural height
+            formContent.classList.remove('collapsed');
+
+            // Use requestAnimationFrame to ensure layout is complete
+            requestAnimationFrame(() => {
+                // Additional timeout to ensure all content is rendered
+                setTimeout(() => {
+                    this.expandedFormHeight = formSection.offsetHeight;
+                    recordsSection.style.height = this.expandedFormHeight + 'px';
+
+                    // Now collapse the form
+                    formContent.classList.add('collapsed');
+                    const chevronIcon = toggleBtn.querySelector('i');
+                    if (chevronIcon) {
+                        chevronIcon.className = 'fas fa-chevron-down';
+                    }
+                    toggleBtn.title = 'Show form';
+                }, 200); // Increased timeout for safety
+            });
+        }
+    }
+
+    // Update panel heights based on form state
+    updatePanelHeights() {
+        const formSection = document.querySelector('.form-section');
+        const recordsSection = document.querySelector('.records-section');
+        const formContent = document.querySelector('.form-content');
+
+        if (formSection && recordsSection && this.expandedFormHeight) {
+            // Always maintain the records section at the expanded form height
+            recordsSection.style.height = this.expandedFormHeight + 'px';
+
+            // If form is expanded, double-check the height in case content changed
+            if (formContent && !formContent.classList.contains('collapsed')) {
+                // Wait for the CSS transition to complete, then update if necessary
+                setTimeout(() => {
+                    const currentFormHeight = formSection.offsetHeight;
+                    if (Math.abs(currentFormHeight - this.expandedFormHeight) > 5) { // Allow for small differences
+                        this.expandedFormHeight = currentFormHeight;
+                        recordsSection.style.height = this.expandedFormHeight + 'px';
+                    }
+                }, 350);
+            }
+        }
     }
 }
 

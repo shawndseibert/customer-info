@@ -50,10 +50,15 @@
             <section class="form-section">
                 <div class="form-header">
                     <h2><i class="fas fa-user-plus"></i> Add New Customer</h2>
-                    <i id="generateTestCustomer" class="fas fa-user-plus test-customer-icon" title="Click to generate test customer"></i>
+                    <div class="form-header-actions">
+                        <i id="generateTestCustomer" class="fas fa-user-plus test-customer-icon" title="Click to generate test customer"></i>
+                        <button id="toggleForm" class="form-toggle-btn" title="Toggle form visibility">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
                 </div>
-                <form id="customerForm" class="customer-form">
-                    <!-- Contact Information -->
+                <div class="form-content">
+                    <form id="customerForm">
                     <div class="form-group">
                         <h3><i class="fas fa-address-card"></i> Contact Information</h3>
                         <div class="form-row">
@@ -185,6 +190,7 @@
                         </button>
                     </div>
                 </form>
+                </div>
             </section>
 
             <!-- Customer Records Section -->
@@ -480,22 +486,53 @@
 
         // Function to match panel heights
         function matchPanelHeights() {
+            // If CustomerManager exists and has initialized the height, don't override
+            if (window.customerManager && window.customerManager.expandedFormHeight) {
+                // CustomerManager has already set the height, just ensure it's maintained
+                const recordsSection = document.querySelector('.records-section');
+                if (recordsSection) {
+                    recordsSection.style.height = window.customerManager.expandedFormHeight + 'px';
+                }
+                return;
+            }
+
+            // If CustomerManager exists and is initialized, use its method
+            if (window.customerManager && typeof window.customerManager.updatePanelHeights === 'function') {
+                window.customerManager.updatePanelHeights();
+                return;
+            }
+
+            // Fallback logic if CustomerManager not available
             const formSection = document.querySelector('.form-section');
             const recordsSection = document.querySelector('.records-section');
-            
-            if (formSection && recordsSection) {
-                // Reset height to get natural height
-                recordsSection.style.height = 'auto';
-                
-                // Get the natural height of the form section
-                const formHeight = formSection.offsetHeight;
-                
-                // Set the records section to match
-                recordsSection.style.height = formHeight + 'px';
-            }
-        }
+            const formContent = document.querySelector('.form-content');
 
-        // Match heights when page loads and when window resizes
+            if (formSection && recordsSection) {
+                // If form is expanded, measure the height
+                if (formContent && !formContent.classList.contains('collapsed')) {
+                    // Wait for any CSS transitions to complete before measuring height
+                    setTimeout(() => {
+                        const formHeight = formSection.offsetHeight;
+                        recordsSection.style.height = formHeight + 'px';
+                    }, 350);
+                } else {
+                    // Form is collapsed, try to maintain the expanded height
+                    // For fallback, we'll use a reasonable default or measure if possible
+                    if (!recordsSection.style.height || recordsSection.style.height === 'auto') {
+                        // If we don't have a stored height, measure the form temporarily
+                        const wasCollapsed = formContent && formContent.classList.contains('collapsed');
+                        if (wasCollapsed && formContent) {
+                            formContent.classList.remove('collapsed');
+                            setTimeout(() => {
+                                const formHeight = formSection.offsetHeight;
+                                recordsSection.style.height = formHeight + 'px';
+                                formContent.classList.add('collapsed');
+                            }, 50);
+                        }
+                    }
+                }
+            }
+        }        // Match heights when page loads and when window resizes
         window.addEventListener('load', matchPanelHeights);
         window.addEventListener('resize', matchPanelHeights);
 

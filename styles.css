@@ -643,26 +643,39 @@ body.dark-theme .legend-item span {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 10px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.customer-info {
+    flex: 1;
+    margin-right: 10px;
 }
 
 .customer-name {
     font-size: 1.3rem;
     font-weight: 700;
     color: #2d3748;
+    line-height: 1.2;
 }
 
 .customer-phone {
     color: #667eea;
     font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 2px;
 }
 
 .customer-service {
     background: #667eea;
     color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
     font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .customer-details {
@@ -698,13 +711,12 @@ body.dark-theme .legend-item span {
 .status-follow-up { background: #fbb6ce; color: #97266d; }
 
 .priority-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.65rem;
     font-weight: 600;
+    display: inline-block;
+    margin-right: 6px;
 }
 
 .priority-high { background: #fed7d7; color: #c53030; }
@@ -1680,4 +1692,84 @@ body.dark-theme textarea:focus {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* Contacted Customer Status */
+.customer-card.contacted {
+    background: rgba(16, 185, 129, 0.1); /* Light green tint */
+    border-left: 4px solid #10b981; /* Green left border */
+}
+
+.contacted-indicator {
+    background: #10b981;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 6px;
+}
+
+/* Badge row layout - inline with customer info */
+.customer-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.contacted-indicator i {
+    font-size: 0.6rem;
+}
+
+/* Badge row responsive layout */
+@media (max-width: 768px) {
+    .customer-badge-row {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 3px;
+    }
+    
+    .priority-badge,
+    .customer-service,
+    .contacted-indicator {
+        font-size: 0.6rem;
+        padding: 2px 5px;
+    }
+}
+
+/* Contact button states */
+.contact-btn.contacted {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+.contact-btn.contacted:hover {
+    background: #dc2626 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Dark theme - Contacted status */
+body.dark-theme .customer-card.contacted {
+    background: rgba(16, 185, 129, 0.15);
+    border-left: 4px solid #10b981;
+}
+
+body.dark-theme .contacted-indicator {
+    background: #10b981;
+    color: #1a202c;
+}
+
+body.dark-theme .contact-btn.contacted {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+body.dark-theme .contact-btn.contacted:hover {
+    background: #dc2626 !important;
 }

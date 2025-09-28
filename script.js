@@ -544,20 +544,51 @@ class CustomerManager {
             const customer = this.customers[customerIndex];
             const currentDate = new Date().toISOString();
             
-            // Update status if it's still initial
-            if (customer.status === 'initial' || !customer.status) {
-                customer.status = 'quoted';
+            if (customer.contacted) {
+                // Customer is already contacted - remove contacted status
+                customer.contacted = false;
+                customer.contactedDate = null;
+                
+                // Remove contact note from notes (find and remove the most recent one)
+                if (customer.notes) {
+                    customer.notes = customer.notes
+                        .replace(/\s*\|\s*Contacted on \d{1,2}\/\d{1,2}\/\d{4}$/, '') // Remove trailing contact note
+                        .replace(/^Contacted on \d{1,2}\/\d{1,2}\/\d{4}\s*\|\s*/, '') // Remove leading contact note
+                        .replace(/\s*\|\s*Contacted on \d{1,2}\/\d{1,2}\/\d{4}\s*\|\s*/, ' | '); // Remove middle contact note
+                    
+                    // Clean up empty notes
+                    if (customer.notes.trim() === '') {
+                        customer.notes = '';
+                    }
+                }
+                
+                customer.updatedAt = currentDate;
+                
+                this.saveCustomers();
+                this.renderCustomers();
+                this.updateStats();
+                this.showNotification(`${customer.firstName} ${customer.lastName} contact status removed`, 'info');
+                
+            } else {
+                // Mark customer as contacted
+                customer.contacted = true;
+                customer.contactedDate = currentDate;
+                
+                // Update status if it's still initial
+                if (customer.status === 'initial' || !customer.status) {
+                    customer.status = 'quoted';
+                }
+                
+                // Add contact note
+                const contactNote = `Contacted on ${new Date().toLocaleDateString()}`;
+                customer.notes = customer.notes ? `${customer.notes} | ${contactNote}` : contactNote;
+                customer.updatedAt = currentDate;
+                
+                this.saveCustomers();
+                this.renderCustomers();
+                this.updateStats();
+                this.showNotification(`${customer.firstName} ${customer.lastName} marked as contacted`, 'success');
             }
-            
-            // Add contact note
-            const contactNote = `Contacted on ${new Date().toLocaleDateString()}`;
-            customer.notes = customer.notes ? `${customer.notes} | ${contactNote}` : contactNote;
-            customer.updatedAt = currentDate;
-            
-            this.saveCustomers();
-            this.renderCustomers();
-            this.updateStats();
-            this.showNotification(`${customer.firstName} ${customer.lastName} marked as contacted`, 'success');
         }
     }
 
@@ -617,16 +648,19 @@ class CustomerManager {
         const statusClass = `status-${customer.status || 'initial'}`;
         
         return `
-            <div class="customer-card" data-customer-id="${customer.id}" data-priority="${customer.priority || 'medium'}" data-status="${customer.status || 'initial'}">
-                <div class="priority-badge ${priorityClass}">
-                    ${(customer.priority || 'medium').toUpperCase()}
-                </div>
+            <div class="customer-card ${customer.contacted ? 'contacted' : ''}" data-customer-id="${customer.id}" data-priority="${customer.priority || 'medium'}" data-status="${customer.status || 'initial'}">
                 <div class="customer-card-header">
-                    <div>
+                    <div class="customer-info">
                         <div class="customer-name">${customer.firstName} ${customer.lastName}</div>
                         <div class="customer-phone">${customer.phone}</div>
                     </div>
-                    <div class="customer-service">${this.getServiceTypeLabel(customer.serviceType)}</div>
+                    <div class="customer-badge-row">
+                        <div class="customer-service">${this.getServiceTypeLabel(customer.serviceType)}</div>
+                        <div class="priority-badge ${priorityClass}">
+                            ${(customer.priority || 'medium').toUpperCase()}
+                        </div>
+                        ${customer.contacted ? '<div class="contacted-indicator"><i class="fas fa-phone"></i> CONTACTED</div>' : ''}
+                    </div>
                 </div>
                 <div class="customer-details">
                     <div><strong>Email:</strong> ${customer.email || 'Not provided'}</div>
@@ -644,15 +678,20 @@ class CustomerManager {
                     <div><strong>Budget:</strong> ${this.getBudgetLabel(customer.budget)}</div>
                     <div><strong>Added:</strong> ${createdDate}</div>
                 </div>
-                ${customer.notes ? `<div class="customer-notes">"${customer.notes}"</div>` : ''}
+                ${customer.notes ? `<div class="customer-notes">${this.formatCustomerNotes(customer.notes)}</div>` : ''}
                 ${customer.meetingDate ? `<div class="customer-meeting"><strong>Next Meeting:</strong> ${new Date(customer.meetingDate).toLocaleString()}</div>` : ''}
                 <div class="customer-actions" onclick="event.stopPropagation()">
                     <button class="action-btn edit-btn" onclick="window.customerManager.quickEdit('${customer.id}')">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="action-btn contact-btn" onclick="window.customerManager.markContacted('${customer.id}')">
-                        <i class="fas fa-phone"></i> Mark Contacted
-                    </button>
+                    ${customer.contacted ? 
+                        `<button class="action-btn contact-btn contacted" onclick="window.customerManager.markContacted('${customer.id}')">
+                            <i class="fas fa-phone-slash"></i> Remove Contacted
+                        </button>` :
+                        `<button class="action-btn contact-btn" onclick="window.customerManager.markContacted('${customer.id}')">
+                            <i class="fas fa-phone"></i> Mark Contacted
+                        </button>`
+                    }
                 </div>
             </div>
         `;
@@ -789,7 +828,7 @@ class CustomerManager {
                 ${customer.notes ? `
                     <div class="detail-item">
                         <span class="detail-label">Notes</span>
-                        <span class="detail-value">${customer.notes}</span>
+                        <span class="detail-value">${this.formatCustomerNotes(customer.notes)}</span>
                     </div>
                 ` : ''}
             </div>
@@ -826,7 +865,31 @@ class CustomerManager {
         Object.keys(customer).forEach(key => {
             const field = form.querySelector(`[name="${key}"]`);
             if (field) {
-                field.value = customer[key] || '';
+                if (field.tagName === 'SELECT') {
+                    // Handle select fields specially
+                    if (key === 'serviceType') {
+                        // For service type, try to find the exact match first
+                        let valueToSet = customer[key] || '';
+                        
+                        // If the stored value doesn't match any option, try to find by label
+                        const option = Array.from(field.options).find(opt => 
+                            opt.value === valueToSet || 
+                            opt.textContent === valueToSet ||
+                            this.getServiceTypeLabel(opt.value) === valueToSet
+                        );
+                        
+                        if (option) {
+                            field.value = option.value;
+                        } else {
+                            console.warn('Could not find matching service type option for:', valueToSet);
+                            field.value = '';
+                        }
+                    } else {
+                        field.value = customer[key] || '';
+                    }
+                } else {
+                    field.value = customer[key] || '';
+                }
             }
         });
         
@@ -1262,6 +1325,33 @@ class CustomerManager {
             'consultation': 'Consultation'
         };
         return labels[value] || value || 'Not specified';
+    }
+
+    // Format customer notes for better readability
+    formatCustomerNotes(notes) {
+        if (!notes || notes.trim() === '') return '';
+        
+        // Split on common separators and clean up
+        let formattedNotes = notes
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+        
+        // Check if notes contain structured data from customer form
+        if (formattedNotes.includes('Urgency:') || formattedNotes.includes('Contact Preference:')) {
+            // Format structured notes with line breaks
+            formattedNotes = formattedNotes
+                .replace(/Urgency:/g, '<br>Urgency:')
+                .replace(/Contact Preference:/g, '<br>Contact Preference:')
+                .replace(/Best Contact Time:/g, '<br>Best Contact Time:')
+                .replace(/How they heard about us:/g, '<br>How they heard about us:')
+                .replace(/Additional Notes:/g, '<br>Additional Notes:')
+                .replace(/Source:/g, '<br>Source:')
+                .replace(/Form Submitted:/g, '<br>Form Submitted:')
+                .replace(/Submitted:/g, '<br>Submitted:')
+                .replace(/^\s*<br>/, ''); // Remove leading line break
+        }
+        
+        return formattedNotes;
     }
 
     getStatusLabel(value) {
